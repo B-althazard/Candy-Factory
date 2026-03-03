@@ -1,0 +1,86 @@
+/* Header */
+.c-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s-12);margin-bottom:var(--s-18);}
+.c-title{font-size:var(--fs-28);font-weight:var(--fw-bold);line-height:1.1;}
+.c-subtitle{font-size:var(--fs-14);opacity:.6;margin-top:var(--s-6);}
+.c-actions{display:flex;flex-direction:column;align-items:flex-end;gap:var(--s-8);}
+
+/* Card + sections */
+.c-card{
+  background:var(--c-surface);
+  border-radius:var(--r-18);
+  padding:var(--s-18);
+  box-shadow:var(--sh-card);
+}
+.c-sectionTitle{font-size:var(--fs-16);font-weight:var(--fw-semibold);margin-bottom:var(--s-12);}
+.c-muted{opacity:.6;font-size:var(--fs-12);margin-top:var(--s-8);}
+
+/* Badge */
+.c-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:var(--s-8);
+  padding:var(--s-8) var(--s-10);
+  border-radius:var(--r-14);
+  background:var(--c-surface);
+  border:var(--b-subtle);
+  font-size:var(--fs-12);
+  opacity:.85;
+}
+.c-dot{width:8px;height:8px;border-radius:50%;background:var(--c-ink);}
+
+/* Buttons */
+.c-btn{border:0;cursor:pointer;transition:transform var(--t-fast);}
+.c-btn:active{transform:scale(.99);}
+.c-btnPrimary{
+  width:100%;
+  background:var(--c-ink);
+  color:var(--c-surface);
+  padding:14px;
+  border-radius:var(--r-16);
+  font-size:var(--fs-16);
+  font-weight:var(--fw-semibold);
+}
+.c-btnGhost{
+  background:var(--c-surface);
+  border:var(--b-subtle);
+  color:var(--c-ink);
+  border-radius:var(--r-14);
+  padding:10px 12px;
+  font-size:var(--fs-13);
+  box-shadow:var(--sh-float);
+}
+.is-disabled,[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none;}
+
+/* Inputs */
+.c-input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:var(--r-12);
+  border:var(--b-input);
+  background:var(--c-bg);
+}
+.c-input:focus{border-color:#cfcfcf;}
+.c-textarea{
+  width:100%;
+  height:140px;
+  border-radius:var(--r-12);
+  border:0;
+  background:var(--c-bg);
+  padding:12px;
+  font-size:var(--fs-13);
+  resize:none;
+}
+
+/* Chips */
+.c-chip{
+  width:100%;
+  background:var(--c-bg);
+  border:0;
+  padding:12px;
+  border-radius:var(--r-14);
+  font-size:var(--fs-14);
+  cursor:pointer;
+  transition:transform var(--t-fast);
+}
+.c-chip:active{transform:scale(.99);}
+.c-chip.is-active{background:var(--c-ink);color:var(--c-surface);}

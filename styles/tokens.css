@@ -1,0 +1,45 @@
+:root{
+  /* Palette */
+  --c-ink:#282a29;
+  --c-bg:#f6f6f6;
+  --c-surface:#ffffff;
+
+  /* Typography */
+  --ff:"Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --fw-regular:400;
+  --fw-semibold:600;
+  --fw-bold:700;
+
+  --fs-12:12px;
+  --fs-13:13px;
+  --fs-14:14px;
+  --fs-16:16px;
+  --fs-28:28px;
+
+  /* Spacing */
+  --s-6:6px;
+  --s-8:8px;
+  --s-10:10px;
+  --s-12:12px;
+  --s-14:14px;
+  --s-16:16px;
+  --s-18:18px;
+  --s-20:20px;
+
+  /* Radius */
+  --r-12:12px;
+  --r-14:14px;
+  --r-16:16px;
+  --r-18:18px;
+
+  /* Elevation */
+  --sh-card:0 8px 20px rgba(0,0,0,.04);
+  --sh-float:0 6px 16px rgba(0,0,0,.03);
+
+  /* Borders */
+  --b-subtle:1px solid #e7e7e7;
+  --b-input:1px solid #dddddd;
+
+  /* Motion */
+  --t-fast:150ms;
+}
