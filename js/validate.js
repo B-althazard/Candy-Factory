@@ -4,17 +4,29 @@ export function validateState(state, schema) {
 
   for (const f of fields) {
     if (!f?.path) continue;
-    const v = getByPath(state, f.path);
+    const vRaw = getByPath(state, f.path);
 
-    if (f.required && !v) {
+    if (f.required && !vRaw) {
       issues.push({ path: f.path, type: "required", message: "Required" });
       continue;
     }
 
-    if (f.type === "select" && v) {
+    if (f.type === "select" && vRaw) {
       const opts = Array.isArray(f.options) ? f.options.map(String) : [];
-      if (opts.length && !opts.includes(String(v))) {
-        issues.push({ path: f.path, type: "option", message: "Invalid option" });
+      if (!opts.length) continue;
+
+      if (f.multi) {
+        const values = parseMulti(vRaw);
+        for (const v of values) {
+          if (!opts.includes(v)) {
+            issues.push({ path: f.path, type: "option", message: "Invalid option" });
+            break;
+          }
+        }
+      } else {
+        if (!opts.includes(String(vRaw))) {
+          issues.push({ path: f.path, type: "option", message: "Invalid option" });
+        }
       }
     }
   }
@@ -53,6 +65,14 @@ export function flattenSchemaFields(schema) {
     }
   }
   return out;
+}
+
+export function parseMulti(raw) {
+  return String(raw).split("|").map(s => s.trim()).filter(Boolean);
+}
+
+export function joinMulti(values) {
+  return (values ?? []).map(s => String(s).trim()).filter(Boolean).join(" | ");
 }
 
 function getByPath(obj, path) {

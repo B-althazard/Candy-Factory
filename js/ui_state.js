@@ -25,3 +25,12 @@ export function setCollapsed(uiState, sectionId, collapsed) {
   if (!uiState.collapsed || typeof uiState.collapsed !== "object") uiState.collapsed = {};
   uiState.collapsed[String(sectionId)] = Boolean(collapsed);
 }
+
+export function getOutputMode(uiState) {
+  const m = String(uiState?.output_mode ?? "").toLowerCase();
+  return m === "prompt" ? "prompt" : "preferred";
+}
+
+export function setOutputMode(uiState, mode) {
+  uiState.output_mode = String(mode || "preferred").toLowerCase() === "prompt" ? "prompt" : "preferred";
+}

@@ -3,13 +3,6 @@ const NAME_POOL = [
   "Sofia","Maya","Ava","Noa","Elena","Aria","Rin","Kira","Naomi","Amara"
 ];
 
-/**
- * options:
- * - onlyPaths: Set/Array of paths to consider (if provided, only those are randomized)
- * - lockedPaths: Set of paths to SKIP (locks apply to global randomize)
- * - lockAfter: boolean; if true, returns paths actually randomized (for locking)
- * - includeName: boolean; if true, randomizes character.name when eligible
- */
 export function randomizeState(state, schema, options = {}) {
   const onlySet = toSet(options.onlyPaths);
   const locked = options.lockedPaths instanceof Set ? options.lockedPaths : new Set();
@@ -17,33 +10,34 @@ export function randomizeState(state, schema, options = {}) {
 
   const randomized = [];
 
-  // Name
   if (includeName && shouldConsider("character.name", onlySet) && !locked.has("character.name")) {
     setByPath(state, "character.name", pick(NAME_POOL));
     randomized.push("character.name");
   }
 
-  // Locked dataset gender
   if (shouldConsider("subject.gender", onlySet)) {
     setByPath(state, "subject.gender", "female");
-    // do not mark as randomized/lockable
   }
 
   for (const f of flattenSchemaFields(schema)) {
     if (!f?.path) continue;
-
     const path = String(f.path);
     if (!shouldConsider(path, onlySet)) continue;
-    if (path === "subject.gender") continue;
-    if (path === "character.name") continue;
+    if (path === "subject.gender" || path === "character.name") continue;
     if (locked.has(path)) continue;
 
     if (f.type === "select") {
       const opts = Array.isArray(f.options) ? f.options : [];
-      if (opts.length) {
-        setByPath(state, path, pick(opts));
-        randomized.push(path);
+      if (!opts.length) continue;
+
+      if (f.multi) {
+        const n = Math.min(opts.length, 1 + Math.floor(Math.random() * Math.min(3, opts.length)));
+        const chosen = sampleUnique(opts, n).map(String);
+        setByPath(state, path, chosen.join(" | "));
+      } else {
+        setByPath(state, path, String(pick(opts)));
       }
+      randomized.push(path);
     }
   }
 
@@ -74,6 +68,15 @@ function flattenSchemaFields(schema) {
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function sampleUnique(arr, n) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
 }
 
 function setByPath(obj, path, value) {

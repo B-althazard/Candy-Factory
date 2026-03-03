@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.1.5",
   "mode": "normal",
   "sections": [
     {
@@ -2136,10 +2136,6 @@
     {
       "from": "0.1.4",
       "to": "0.1.5"
-    },
-    {
-      "from": "0.1.5",
-      "to": "0.2.0"
     }
   ]
 }

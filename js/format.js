@@ -28,7 +28,6 @@ export function formatPreferredOutput(state, schema) {
   const h = getByPath(state, "body.height_cm");
   if (h) lines.push(`Height ${h}cm`);
 
-  // Schema-driven for all other fields (label, value)
   const skip = new Set([
     "character.name",
     "subject.gender",
@@ -44,10 +43,14 @@ export function formatPreferredOutput(state, schema) {
     if (!f?.path || skip.has(f.path)) continue;
     const v = getByPath(state, f.path);
     if (!v) continue;
-    lines.push(`${f.label ?? f.path}, ${v}`);
+    lines.push(`${f.label ?? f.path}, ${normalizeMulti(v)}`);
   }
 
   return lines.join("\n");
+}
+
+function normalizeMulti(v) {
+  return String(v).split("|").map(s => s.trim()).filter(Boolean).join(", ");
 }
 
 function flattenSchemaFields(schema) {

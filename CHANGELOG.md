@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.0 (2026-03-03)
+- Workstation foundation: desktop split panes, mobile tabs + mobile workstation mode.
+- Theme selector: Light / Dark / Native (persisted).
+- Multi-character: create/rename/switch.
+- Layout save/load (stored locally).
+- Project import/export (.cfproject.json) including characters, locks, layouts, settings.
+
+## v0.1.5 (2026-03-03)
+- Added Presets: save/load/delete named presets (state + locks) persisted in localStorage.
+- Added multiselect fields where additive attributes are logical; supports validation, randomization, export, and output formatting.
+- Added prompt-optimized output mode toggle (Preferred vs Prompt) for future AI conversion.
+- Updated schema version + no-op migration 0.1.4 → 0.1.5; updated PWA cache version and schema fallback pointer.
+
 ## v0.1.4 (2026-03-03)
 - Fixed broken deployment from v0.1.3 placeholder files by restoring full app logic.
 - Added collapsible schema sections with persisted open/closed state.
