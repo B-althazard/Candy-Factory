@@ -1,22 +1,26 @@
-const CACHE_NAME = "cc-cache-v1";
+const CACHE_NAME = "candy-factory-v0.0.6";
 
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
+  "./VERSION.txt",
+  "./CHANGELOG.md",
+  "./data/schema.json",
+  "./data/schema.v0.0.6.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./styles/tokens.css",
   "./styles/utilities.css",
   "./styles/components.css",
   "./js/app.js",
+  "./js/pwa.js",
+  "./js/schema.js",
   "./js/state.js",
   "./js/storage.js",
-  "./js/pwa.js",
   "./js/ui.js",
-  "./js/components/chips.js",
-  "./js/components/form.js",
+  "./js/components/fields.js",
   "./js/components/output.js"
 ];
 
@@ -43,7 +47,6 @@ self.addEventListener("fetch", (event) => {
   const accept = req.headers.get("accept") || "";
   const isHTML = req.mode === "navigate" || accept.includes("text/html");
 
-  // Network-first for HTML
   if (isHTML) {
     event.respondWith((async () => {
       try {
@@ -59,7 +62,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for assets
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(req);

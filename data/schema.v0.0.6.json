@@ -1,0 +1,793 @@
+{
+  "schema_version": "0.0.6",
+  "mode": "normal",
+  "sections": [
+    {
+      "id": "character",
+      "title": "Character",
+      "fields": [
+        {
+          "path": "character.name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "subject",
+      "title": "Subject",
+      "fields": [
+        {
+          "path": "subject.category",
+          "label": "Category",
+          "type": "select",
+          "options": [
+            "human",
+            "elf",
+            "dwarf",
+            "succubus",
+            "android",
+            "vampire",
+            "fae",
+            "demigod",
+            "shapeshifter",
+            "celestial"
+          ]
+        },
+        {
+          "path": "subject.gender",
+          "label": "Gender",
+          "type": "select",
+          "options": [
+            "female"
+          ],
+          "locked": true
+        },
+        {
+          "path": "subject.age",
+          "label": "Age",
+          "type": "select",
+          "options": [
+            "between 19 and 21",
+            "between 21 and 23",
+            "between 23 and 25"
+          ]
+        },
+        {
+          "path": "subject.ethnicity",
+          "label": "Ethnicity",
+          "type": "select",
+          "options": [
+            "East Asian",
+            "West African",
+            "Northern European",
+            "South Asian",
+            "Middle Eastern",
+            "Indigenous American",
+            "Pacific Islander",
+            "Afro-Caribbean",
+            "Mediterranean",
+            "Central Asian"
+          ]
+        },
+        {
+          "path": "subject.demographics",
+          "label": "Demographics",
+          "type": "select",
+          "options": [
+            "young adult",
+            "middle-aged",
+            "elderly",
+            "aristocratic",
+            "nomadic",
+            "urban resident",
+            "rural settler",
+            "scholar caste",
+            "warrior class",
+            "merchant lineage"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "appearance",
+      "title": "Appearance",
+      "subsections": [
+        {
+          "id": "appearance_hair",
+          "title": "Hair",
+          "fields": [
+            {
+              "path": "appearance.hair.cut",
+              "label": "Hair cut",
+              "type": "select",
+              "options": [
+                "layered cut",
+                "blunt cut",
+                "asymmetrical bob",
+                "braided crown",
+                "loose waves",
+                "tight curls",
+                "high ponytail",
+                "shaved sides",
+                "undercut",
+                "flowing straight"
+              ]
+            },
+            {
+              "path": "appearance.hair.color",
+              "label": "Hair color",
+              "type": "select",
+              "options": [
+                "jet black",
+                "platinum blonde",
+                "auburn red",
+                "silver grey",
+                "chestnut brown",
+                "ash blonde",
+                "copper orange",
+                "midnight blue",
+                "rose gold",
+                "deep violet"
+              ]
+            },
+            {
+              "path": "appearance.hair.length",
+              "label": "Hair length",
+              "type": "select",
+              "options": [
+                "pixie cut",
+                "ear length",
+                "chin length",
+                "shoulder length",
+                "mid-back",
+                "waist length",
+                "hip length",
+                "knee length",
+                "shaved bald",
+                "ankle length"
+              ]
+            },
+            {
+              "path": "appearance.hair.texture",
+              "label": "Hair texture",
+              "type": "select",
+              "options": [
+                "straight fine",
+                "straight coarse",
+                "loose waves",
+                "tight curls",
+                "coiled afro",
+                "silky smooth",
+                "frizzy",
+                "tousled",
+                "feathered",
+                "thick voluminous"
+              ]
+            },
+            {
+              "path": "appearance.hair.style",
+              "label": "Hair style",
+              "type": "select",
+              "options": [
+                "side-parted",
+                "center-parted",
+                "slicked back",
+                "braided",
+                "half-up half-down",
+                "messy bun",
+                "twin braids",
+                "high ponytail",
+                "low ponytail",
+                "loose and free"
+              ]
+            },
+            {
+              "path": "appearance.hair.motion",
+              "label": "Hair motion",
+              "type": "select",
+              "options": [
+                "wind-swept",
+                "gravity-falling",
+                "floating upward",
+                "tightly bound",
+                "gently swaying",
+                "sharply flipping",
+                "bouncing curls",
+                "slow drift",
+                "rigidly fixed",
+                "weightless flow"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "appearance_face",
+          "title": "Face",
+          "fields": [
+            {
+              "path": "appearance.face.features",
+              "label": "Face features",
+              "type": "select",
+              "options": [
+                "angular features",
+                "soft rounded features",
+                "high cheekbones",
+                "narrow jawline",
+                "broad forehead",
+                "defined chin",
+                "heart-shaped",
+                "oval",
+                "square",
+                "diamond-shaped"
+              ]
+            },
+            {
+              "path": "appearance.face.shape",
+              "label": "Face shape",
+              "type": "select",
+              "options": [
+                "oval",
+                "round",
+                "square",
+                "heart-shaped",
+                "diamond",
+                "triangular",
+                "oblong",
+                "inverted triangle",
+                "rectangular",
+                "soft oval"
+              ]
+            },
+            {
+              "path": "appearance.face.nose",
+              "label": "Nose",
+              "type": "select",
+              "options": [
+                "straight bridge",
+                "aquiline",
+                "button nose",
+                "broad nose",
+                "narrow pointed",
+                "upturned tip",
+                "flat bridge",
+                "hooked tip",
+                "long narrow",
+                "short rounded"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "appearance_eyes",
+          "title": "Eyes",
+          "fields": [
+            {
+              "path": "appearance.eyes.features",
+              "label": "Eye features",
+              "type": "select",
+              "options": [
+                "deep-set",
+                "wide-set",
+                "hooded lids",
+                "almond-shaped",
+                "round",
+                "upturned corners",
+                "downturned corners",
+                "monolid",
+                "heavy-lidded",
+                "sharp gaze"
+              ]
+            },
+            {
+              "path": "appearance.eyes.color",
+              "label": "Eye color",
+              "type": "select",
+              "options": [
+                "deep brown",
+                "icy blue",
+                "emerald green",
+                "hazel",
+                "amber",
+                "grey",
+                "violet",
+                "black",
+                "heterochromia blue-brown",
+                "golden"
+              ]
+            },
+            {
+              "path": "appearance.eyes.shape",
+              "label": "Eye shape",
+              "type": "select",
+              "options": [
+                "almond",
+                "round",
+                "monolid",
+                "hooded",
+                "downturned",
+                "upturned",
+                "narrow slit",
+                "wide oval",
+                "sharp angular",
+                "soft drooping"
+              ]
+            },
+            {
+              "path": "appearance.eyes.makeup",
+              "label": "Eye makeup",
+              "type": "select",
+              "options": [
+                "winged liner",
+                "smudged kohl",
+                "metallic shadow",
+                "nude shadow",
+                "heavy mascara",
+                "colored liner",
+                "glitter accent",
+                "cut crease",
+                "soft blended",
+                "bare"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "appearance_lips",
+          "title": "Lips",
+          "fields": [
+            {
+              "path": "appearance.lips.form",
+              "label": "Lip form",
+              "type": "select",
+              "options": [
+                "thin upper lip",
+                "full lower lip",
+                "symmetrical fullness",
+                "pronounced cupid’s bow",
+                "wide mouth",
+                "narrow mouth",
+                "softly curved",
+                "sharply defined",
+                "slightly parted",
+                "relaxed line"
+              ]
+            },
+            {
+              "path": "appearance.lips.fullness",
+              "label": "Lip fullness",
+              "type": "select",
+              "options": [
+                "very thin",
+                "thin",
+                "balanced",
+                "full",
+                "very full",
+                "wide-set",
+                "narrow-set",
+                "pronounced cupid’s bow",
+                "subtle cupid’s bow",
+                "softly rounded"
+              ]
+            },
+            {
+              "path": "appearance.lips.color",
+              "label": "Lip color",
+              "type": "select",
+              "options": [
+                "natural pink",
+                "deep red",
+                "coral",
+                "mauve",
+                "nude beige",
+                "burgundy",
+                "plum",
+                "peach",
+                "brown",
+                "clear gloss"
+              ]
+            },
+            {
+              "path": "appearance.lips.state",
+              "label": "Lips state",
+              "type": "select",
+              "options": [
+                "closed relaxed",
+                "slightly parted",
+                "faint smile",
+                "neutral line",
+                "subtle pout",
+                "firm press",
+                "gentle smirk",
+                "glossy finish",
+                "matte finish",
+                "lightly chapped"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "appearance_skin",
+          "title": "Skin",
+          "fields": [
+            {
+              "path": "appearance.skin.look",
+              "label": "Skin look",
+              "type": "select",
+              "options": [
+                "porcelain smooth",
+                "sun-kissed",
+                "olive-toned",
+                "deep ebony",
+                "warm beige",
+                "cool ivory",
+                "bronzed",
+                "golden brown",
+                "rosy undertone",
+                "neutral undertone"
+              ]
+            },
+            {
+              "path": "appearance.skin.tone",
+              "label": "Skin tone",
+              "type": "select",
+              "options": [
+                "porcelain",
+                "fair ivory",
+                "light beige",
+                "warm tan",
+                "olive",
+                "caramel",
+                "bronze",
+                "deep brown",
+                "ebony",
+                "cool undertone"
+              ]
+            },
+            {
+              "path": "appearance.skin.texture",
+              "label": "Skin texture",
+              "type": "select",
+              "options": [
+                "smooth",
+                "lightly textured",
+                "visible pores",
+                "soft matte",
+                "dewy",
+                "lightly freckled",
+                "faint scarring",
+                "subtle wrinkles",
+                "velvety",
+                "slightly rough"
+              ]
+            },
+            {
+              "path": "appearance.skin.finish",
+              "label": "Skin finish",
+              "type": "select",
+              "options": [
+                "matte",
+                "satin",
+                "glossy",
+                "radiant",
+                "natural sheen",
+                "powdered",
+                "luminous",
+                "soft glow",
+                "diffused",
+                "high-shine"
+              ]
+            },
+            {
+              "path": "appearance.skin.freckles",
+              "label": "Freckles",
+              "type": "select",
+              "options": [
+                "none",
+                "light dusting across nose",
+                "dense across cheeks",
+                "shoulder freckles",
+                "scattered arms",
+                "faint temple specks",
+                "sun-kissed bridge",
+                "clustered jawline",
+                "sparse chin",
+                "heavy full-face"
+              ]
+            },
+            {
+              "path": "appearance.skin.water_droplets",
+              "label": "Water droplets",
+              "type": "select",
+              "options": [
+                "none",
+                "light mist",
+                "beaded forehead",
+                "dripping chin",
+                "shoulder droplets",
+                "collarbone sheen",
+                "cheek streaks",
+                "neck beads",
+                "forearm sheen",
+                "full-body mist"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "appearance_other",
+          "title": "Makeup & micro details",
+          "fields": [
+            {
+              "path": "appearance.makeup_style",
+              "label": "Makeup style",
+              "type": "select",
+              "options": [
+                "natural minimal",
+                "smokey eyes",
+                "bold eyeliner",
+                "glossy finish",
+                "matte contour",
+                "high-gloss highlight",
+                "monochrome tones",
+                "dramatic lashes",
+                "soft glam",
+                "editorial avant-garde"
+              ]
+            },
+            {
+              "path": "appearance.micro_details",
+              "label": "Micro details",
+              "type": "select",
+              "options": [
+                "faint scar on cheek",
+                "beauty mark above lip",
+                "subtle under-eye crease",
+                "eyebrow slit",
+                "chipped nail polish",
+                "tiny nose piercing",
+                "eyebrow piercing",
+                "faint dimples",
+                "smile lines",
+                "light forehead crease"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "title": "Body",
+      "fields": [
+        {
+          "path": "body.build",
+          "label": "Build",
+          "type": "select",
+          "options": [
+            "slim",
+            "athletic",
+            "muscular",
+            "stocky",
+            "lean toned",
+            "curvy",
+            "broad-built",
+            "petite",
+            "lanky",
+            "balanced"
+          ]
+        },
+        {
+          "path": "body.silhouette",
+          "label": "Silhouette",
+          "type": "select",
+          "options": [
+            "hourglass",
+            "rectangle",
+            "pear-shaped",
+            "inverted triangle",
+            "apple-shaped",
+            "column",
+            "athletic V-shape",
+            "soft curve",
+            "straight line",
+            "tapered"
+          ]
+        },
+        {
+          "path": "body.bust",
+          "label": "Bust",
+          "type": "select",
+          "options": [
+            "small",
+            "modest",
+            "medium",
+            "full",
+            "prominent",
+            "subtle contour",
+            "broad-set",
+            "close-set",
+            "high-set",
+            "low-set"
+          ]
+        },
+        {
+          "path": "body.waist_to_chest_ratio",
+          "label": "Waist-to-chest ratio",
+          "type": "select",
+          "options": [
+            "0.6 narrow waist",
+            "0.7 balanced",
+            "0.8 straight",
+            "0.9 subtle taper",
+            "1.0 uniform",
+            "pronounced taper",
+            "minimal contrast",
+            "high contrast",
+            "soft transition",
+            "sharp transition"
+          ]
+        },
+        {
+          "path": "body.shoulders",
+          "label": "Shoulders",
+          "type": "select",
+          "options": [
+            "narrow",
+            "average width",
+            "broad",
+            "squared",
+            "sloped",
+            "muscular",
+            "delicate",
+            "angular",
+            "rounded",
+            "high-set"
+          ]
+        },
+        {
+          "path": "body.dominance",
+          "label": "Dominance",
+          "type": "select",
+          "options": [
+            "submissive posture",
+            "neutral stance",
+            "assertive stance",
+            "commanding presence",
+            "relaxed aura",
+            "intense presence",
+            "reserved demeanor",
+            "confident bearing",
+            "stoic posture",
+            "expressive stance"
+          ]
+        },
+        {
+          "path": "body.height_cm",
+          "label": "Height (cm)",
+          "type": "select",
+          "options": [
+            "145",
+            "152",
+            "160",
+            "168",
+            "175",
+            "182",
+            "190",
+            "198",
+            "205",
+            "212"
+          ]
+        },
+        {
+          "path": "body.waist_emphasis_system",
+          "label": "Waist emphasis system",
+          "type": "select",
+          "options": [
+            "corset",
+            "belt cinch",
+            "high-waisted garment",
+            "sash wrap",
+            "armored plating",
+            "tailored jacket",
+            "bodice lacing",
+            "elastic compression",
+            "layered drape",
+            "none"
+          ]
+        }
+      ],
+      "subsections": [
+        {
+          "id": "dist_marks",
+          "title": "Distinguishing marks",
+          "fields": [
+            {
+              "path": "body.distinguishing_marks.type",
+              "label": "Type",
+              "type": "select",
+              "options": [
+                "scar",
+                "tattoo",
+                "birthmark",
+                "brand",
+                "ritual carving",
+                "paint marking",
+                "metallic implant",
+                "glowing sigil",
+                "stitched seam",
+                "bioluminescent vein"
+              ]
+            },
+            {
+              "path": "body.distinguishing_marks.location",
+              "label": "Location",
+              "type": "select",
+              "options": [
+                "left cheek",
+                "right eyebrow",
+                "neck",
+                "collarbone",
+                "upper arm",
+                "lower back",
+                "thigh",
+                "ankle",
+                "ribcage",
+                "across spine"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "composition",
+      "title": "Composition",
+      "fields": [
+        {
+          "path": "pose",
+          "label": "Pose",
+          "type": "select",
+          "options": [
+            "standing",
+            "sitting",
+            "action",
+            "floating"
+          ]
+        },
+        {
+          "path": "expression",
+          "label": "Expression",
+          "type": "select",
+          "options": [
+            "happy",
+            "serious",
+            "angry",
+            "surprised"
+          ]
+        },
+        {
+          "path": "background",
+          "label": "Background",
+          "type": "select",
+          "options": [
+            "studio",
+            "forest",
+            "city",
+            "fantasy"
+          ]
+        },
+        {
+          "path": "style",
+          "label": "Style",
+          "type": "select",
+          "options": [
+            "realistic",
+            "anime"
+          ]
+        }
+      ]
+    }
+  ]
+}

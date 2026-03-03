@@ -1,4 +1,4 @@
-const KEY = "cc_state_v1";
+const KEY = "candy_factory_state_v1";
 
 export function loadState() {
   try {
@@ -13,6 +13,6 @@ export function saveState(state) {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
-    // ignore quota / private mode failures
+    // ignore
   }
 }

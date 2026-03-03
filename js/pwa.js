@@ -33,7 +33,5 @@ export function setupInstallButton(buttonEl) {
     window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
 
-  if (isStandalone) {
-    buttonEl.style.display = "none";
-  }
+  if (isStandalone) buttonEl.style.display = "none";
 }

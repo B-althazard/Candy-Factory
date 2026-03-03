@@ -1,10 +1,8 @@
-/* Header */
 .c-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s-12);margin-bottom:var(--s-18);}
 .c-title{font-size:var(--fs-28);font-weight:var(--fw-bold);line-height:1.1;}
 .c-subtitle{font-size:var(--fs-14);opacity:.6;margin-top:var(--s-6);}
 .c-actions{display:flex;flex-direction:column;align-items:flex-end;gap:var(--s-8);}
 
-/* Card + sections */
 .c-card{
   background:var(--c-surface);
   border-radius:var(--r-18);
@@ -12,9 +10,9 @@
   box-shadow:var(--sh-card);
 }
 .c-sectionTitle{font-size:var(--fs-16);font-weight:var(--fw-semibold);margin-bottom:var(--s-12);}
+.c-subSectionTitle{font-size:14px;font-weight:var(--fw-semibold);opacity:.85;margin-top:14px;margin-bottom:var(--s-12);}
 .c-muted{opacity:.6;font-size:var(--fs-12);margin-top:var(--s-8);}
 
-/* Badge */
 .c-badge{
   display:inline-flex;
   align-items:center;
@@ -28,7 +26,6 @@
 }
 .c-dot{width:8px;height:8px;border-radius:50%;background:var(--c-ink);}
 
-/* Buttons */
 .c-btn{border:0;cursor:pointer;transition:transform var(--t-fast);}
 .c-btn:active{transform:scale(.99);}
 .c-btnPrimary{
@@ -51,36 +48,26 @@
 }
 .is-disabled,[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none;}
 
-/* Inputs */
-.c-input{
+.c-input, .c-select{
   width:100%;
   padding:10px 12px;
   border-radius:var(--r-12);
   border:var(--b-input);
   background:var(--c-bg);
 }
-.c-input:focus{border-color:#cfcfcf;}
+.c-input:focus, .c-select:focus{border-color:#cfcfcf;}
+
 .c-textarea{
   width:100%;
-  height:140px;
+  height:190px;
   border-radius:var(--r-12);
   border:0;
   background:var(--c-bg);
   padding:12px;
   font-size:var(--fs-13);
   resize:none;
+  white-space:pre-wrap;
 }
 
-/* Chips */
-.c-chip{
-  width:100%;
-  background:var(--c-bg);
-  border:0;
-  padding:12px;
-  border-radius:var(--r-14);
-  font-size:var(--fs-14);
-  cursor:pointer;
-  transition:transform var(--t-fast);
-}
-.c-chip:active{transform:scale(.99);}
-.c-chip.is-active{background:var(--c-ink);color:var(--c-surface);}
+.c-field{display:flex;flex-direction:column;gap:8px;margin-bottom:var(--s-12);}
+.c-label{font-size:var(--fs-13);opacity:.75;}

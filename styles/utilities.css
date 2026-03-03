@@ -8,14 +8,10 @@ body{
   max-width:480px;
   margin:0 auto;
 }
-button,input,textarea{font-family:inherit;}
+button,input,textarea,select{font-family:inherit;}
 :focus{outline:none;}
 
 .u-row{display:flex;align-items:center;gap:var(--s-12);}
 .u-col{display:flex;flex-direction:column;}
 .u-gap-14{gap:var(--s-14);}
-.u-mt-12{margin-top:var(--s-12);}
-.u-mt-14{margin-top:var(--s-14);}
-.u-mt-18{margin-top:var(--s-18);}
-
 .l-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-12);}

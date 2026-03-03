@@ -1,50 +1,16 @@
 export function createCharacterState(initial = {}) {
   const base = {
-    character: {
-      name: ""
-    },
-
-    subject: {
-      category: "",
-      gender: "",
-      age: "",
-      ethnicity: "",
-      demographics: ""
-    },
-
+    character: { name: "" },
+    subject: { category: "", gender: "female", age: "", ethnicity: "", demographics: "" },
     appearance: {
-      hair: {
-        color: "",
-        length: "",
-        texture: "",
-        style: "",
-        motion: ""
-      },
-      face: {
-        shape: "",
-        nose: ""
-      },
-      eyes: {
-        color: "",
-        shape: "",
-        makeup: ""
-      },
-      lips: {
-        fullness: "",
-        color: "",
-        state: ""
-      },
-      skin: {
-        tone: "",
-        texture: "",
-        finish: "",
-        freckles: "",
-        water_droplets: ""
-      },
+      hair: { cut: "", color: "", length: "", texture: "", style: "", motion: "" },
+      face: { features: "", shape: "", nose: "" },
+      eyes: { features: "", color: "", shape: "", makeup: "" },
+      lips: { form: "", fullness: "", color: "", state: "" },
+      skin: { look: "", tone: "", texture: "", finish: "", freckles: "", water_droplets: "" },
       makeup_style: "",
       micro_details: ""
     },
-
     body: {
       build: "",
       silhouette: "",
@@ -53,82 +19,62 @@ export function createCharacterState(initial = {}) {
       shoulders: "",
       dominance: "",
       height_cm: "",
-      distinguishing_marks: {
-        type: "",
-        location: ""
-      },
-      waist_emphasis_system: ""
+      waist_emphasis_system: "",
+      distinguishing_marks: { type: "", location: "" }
     },
-
-    // Existing v1 fields kept (pose/expression/background, style) for your current UI flow.
     pose: "",
     expression: "",
     background: "",
     style: ""
   };
-
   return deepMerge(base, initial);
 }
 
-export function toKeyValuePairs(state) {
+export function toPreferredOutput(state) {
   const lines = [];
 
-  // Name + Gender (combined)
-  if (state.character.name || state.subject.gender) {
+  const name = state.character?.name?.trim();
+  const gender = state.subject?.gender?.trim();
+
+  if (name || gender) {
     const parts = [];
-    if (state.character.name) parts.push(state.character.name);
-    if (state.subject.gender) parts.push(capitalize(state.subject.gender));
+    if (name) parts.push(name);
+    if (gender) parts.push(capitalize(gender));
     lines.push(`Name ${parts.join(", ")}`);
   }
 
-  // Hair color
-  if (state.appearance.hair.color) {
-    lines.push(`Hair color, ${state.appearance.hair.color}`);
+  const hairColor = state.appearance?.hair?.color?.trim();
+  if (hairColor) lines.push(`Hair color, ${hairColor}`);
+
+  const skinTone = state.appearance?.skin?.tone?.trim();
+  if (skinTone) lines.push(`Skin tone, ${skinTone}`);
+
+  const height = (state.body?.height_cm ?? "").toString().trim();
+  if (height) lines.push(`Height ${height}cm`);
+
+  const markType = state.body?.distinguishing_marks?.type?.trim();
+  const markLoc = state.body?.distinguishing_marks?.location?.trim();
+  if (markType && markLoc) lines.push(`Distinguishing Marks, ${markType} on the ${markLoc}`);
+
+  const pose = state.pose?.trim();
+  const expr = state.expression?.trim();
+  if (pose || expr) {
+    const p = pose ? pose.toLowerCase() : "";
+    const e = expr ? ` with a ${expr.toLowerCase()} expression` : "";
+    lines.push(`Pose, ${p}${e}`);
   }
 
-  // Skin tone
-  if (state.appearance.skin.tone) {
-    lines.push(`Skin tone, ${state.appearance.skin.tone}`);
-  }
+  const bg = state.background?.trim();
+  if (bg) lines.push(`Background ${bg.toLowerCase()}`);
 
-  // Height
-  if (state.body.height_cm) {
-    lines.push(`Height ${state.body.height_cm}cm`);
-  }
-
-  // Distinguishing marks
-  const mark = state.body.distinguishing_marks;
-  if (mark.type && mark.location) {
-    lines.push(
-      `Distinguishing Marks, ${mark.type} on the ${mark.location}`
-    );
-  }
-
-  // Pose + Expression combined
-  if (state.pose || state.expression) {
-    const posePart = state.pose ? state.pose.toLowerCase() : "";
-    const expPart = state.expression
-      ? ` with a ${state.expression.toLowerCase()} expression`
-      : "";
-    lines.push(`Pose, ${posePart}${expPart}`);
-  }
-
-  // Background
-  if (state.background) {
-    lines.push(`Background ${state.background.toLowerCase()}`);
-  }
-
-  // Style
-  if (state.style) {
-    lines.push(`Style, ${state.style}`);
-  }
+  const style = state.style?.trim();
+  if (style) lines.push(`Style, ${style}`);
 
   return lines.join("\n");
 }
 
-/* ---------- helpers ---------- */
-
 function capitalize(str) {
+  if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
