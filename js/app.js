@@ -4,7 +4,8 @@ import { formatPreferredOutput } from "./format.js";
 import { randomizeState } from "./randomize.js";
 import { validateState, applyValidationToFields, summarizeValidation } from "./validate.js";
 import { buildFlatKV, downloadText, downloadJson } from "./export.js";
-import { loadState, saveState } from "./storage.js";
+import { loadState, saveState, loadMeta, saveMeta } from "./storage.js";
+import { migrateIfNeeded } from "./migrate.js";
 import { registerServiceWorker, setupInstallButton } from "./pwa.js";
 import { renderApp } from "./ui.js";
 import { bindFields, setFieldValues } from "./components/fields.js";
@@ -45,8 +46,14 @@ function safeName(s) {
   const { schema, source } = await loadSchema();
 
   const persisted = loadState();
-  const state = createCharacterState(persisted ?? {});
+  const meta = loadMeta();
+
+  const mig = migrateIfNeeded({ state: persisted ?? {}, meta: meta ?? {}, schema });
+  saveMeta(mig.meta);
+
+  const state = createCharacterState(mig.state ?? {});
   if (!state.subject.gender) state.subject.gender = "female";
+  saveState(state);
 
   renderApp(appRoot, { schema, state, getByPath });
 
@@ -70,7 +77,9 @@ function safeName(s) {
 
     const validation = validateState(state, schema);
     applyValidationToFields(appRoot, validation);
-    valMeta.textContent = `Validation: ${summarizeValidation(validation)}`;
+
+    const migNote = mig.didMigrate ? ` • Migration: ${mig.message}` : "";
+    valMeta.textContent = `Validation: ${summarizeValidation(validation)}${migNote}`;
   }
 
   refreshAll();
@@ -101,6 +110,7 @@ function safeName(s) {
     Object.assign(state, fresh);
 
     saveState(state);
+    saveMeta({ ...(loadMeta() ?? {}), schema_version: schema.schema_version ?? "" });
     setFieldValues(appRoot, state, { getByPath });
     refreshAll();
 
@@ -120,7 +130,7 @@ function safeName(s) {
     const filename = `CandyFactory_${safeName(name)}_${nowStamp()}.json`;
     const flat = buildFlatKV(state, schema);
     const payload = {
-      app_version: "0.1.0",
+      app_version: "0.1.1",
       schema_version: schema.schema_version ?? "",
       exported_at: new Date().toISOString(),
       data: flat

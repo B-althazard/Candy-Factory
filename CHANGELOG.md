@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.2 (2026-03-03)
+- Updated schema with Pose addons, Style addons, Waist Emphasis System addon methods, and Wardrobe (outfits) addons.
+- Added no-op migration 0.1.1 → 0.1.2 to advance persisted schema_version.
+- Updated schema fallback pointer and PWA cache version.
+
+## v0.1.1 (2026-03-03)
+- Introduced versioned schema migration system using a persisted meta record (schema_version) and declarative migrations in schema.json.
+- Added migration runner that applies rename/setDefault/delete steps when schema_version changes.
+- Updated schema fallback pointer and PWA cache version.
+
 ## v0.1.0 (2026-03-03)
 - Added schema validation (required + option constraints) with inline invalid field styling and status summary.
 - Added export: download Output as .txt and download character as flat key-value .json.
