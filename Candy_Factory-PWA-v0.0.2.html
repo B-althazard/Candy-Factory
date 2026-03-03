@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f6f6f6" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Character Creator" />
+<title>Character Creator</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --dark:#282a29;
+  --light-gray:#f6f6f6;
+  --white:#ffffff;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Noto Sans",sans-serif;}
+body{background:var(--light-gray);color:var(--dark);padding:20px;max-width:480px;margin:auto;}
+header{margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.hgroup{min-width:0;}
+h1{font-size:28px;font-weight:700;line-height:1.1;}
+.subtitle{font-size:14px;opacity:.6;margin-top:6px;}
+.card{
+  background:var(--white);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.04);
+}
+.section-title{font-size:16px;font-weight:600;margin-bottom:12px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+button.option{
+  background:var(--light-gray);
+  border:0;
+  padding:12px;
+  border-radius:14px;
+  cursor:pointer;
+  font-size:14px;
+  transition:.15s;
+}
+button.option:active{transform:scale(.99);}
+button.option.active{background:var(--dark);color:var(--white);}
+input,select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  background:var(--light-gray);
+  outline:none;
+}
+input:focus,select:focus{border-color:#cfcfcf;}
+textarea{
+  width:100%;
+  height:140px;
+  border-radius:12px;
+  border:0;
+  background:var(--light-gray);
+  padding:12px;
+  font-size:13px;
+  resize:none;
+}
+.primary-btn{
+  background:var(--dark);
+  color:var(--white);
+  border:0;
+  padding:14px;
+  width:100%;
+  border-radius:16px;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  margin:10px 0 14px;
+}
+.primary-btn:active{transform:scale(.99);}
+.top-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.small-btn{
+  background:var(--white);
+  border:1px solid #e7e7e7;
+  color:var(--dark);
+  border-radius:14px;
+  padding:10px 12px;
+  font-size:13px;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.03);
+}
+.small-btn[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none;}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:14px;
+  background:var(--white);
+  border:1px solid #e7e7e7;
+  font-size:12px;
+  opacity:.85;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dark);}
+.row{display:flex;gap:12px;align-items:center;}
+.muted{opacity:.6;font-size:12px;margin-top:8px;}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="hgroup">
+    <h1>Create Character</h1>
+    <div class="subtitle">Customize pose, expression and background</div>
+  </div>
+  <div class="top-actions">
+    <button id="installBtn" class="small-btn" disabled>Install</button>
+    <div id="pwaStatus" class="badge" title="PWA status">
+      <span class="dot"></span><span id="pwaText">Checking…</span>
+    </div>
+  </div>
+</header>
+
+<div class="card">
+  <div class="section-title">Basic Info</div>
+  <input id="name" placeholder="Character Name" autocomplete="off" />
+</div>
+
+<div class="card">
+  <div class="section-title">Pose</div>
+  <div class="grid" data-group="pose">
+    <button class="option" data-value="Standing">Standing</button>
+    <button class="option" data-value="Sitting">Sitting</button>
+    <button class="option" data-value="Action">Action</button>
+    <button class="option" data-value="Floating">Floating</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Expression</div>
+  <div class="grid" data-group="expression">
+    <button class="option" data-value="Happy">Happy</button>
+    <button class="option" data-value="Serious">Serious</button>
+    <button class="option" data-value="Angry">Angry</button>
+    <button class="option" data-value="Surprised">Surprised</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Background</div>
+  <div class="grid" data-group="background">
+    <button class="option" data-value="Studio">Studio</button>
+    <button class="option" data-value="Forest">Forest</button>
+    <button class="option" data-value="City">City</button>
+    <button class="option" data-value="Fantasy">Fantasy</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Character Attributes</div>
+  <div class="row">
+    <input id="age" placeholder="Age" inputmode="numeric" />
+  </div>
+  <div style="height:12px"></div>
+  <input id="style" placeholder="Art Style (e.g. anime, realistic)" autocomplete="off" />
+  <div class="muted">Version 1 outputs key-value pairs. Version 2 can map these to an AI prompt.</div>
+</div>
+
+<button class="primary-btn" id="genBtn">Generate Key-Value Data</button>
+
+<div class="card">
+  <div class="section-title">Output (Version 1)</div>
+  <textarea id="output" readonly></textarea>
+</div>
+
+<script>
+/* -----------------------------
+   App state + UI interactions
+------------------------------ */
+const characterData = {};
+const outputEl = document.getElementById("output");
+
+function setActive(groupEl, btnEl) {
+  groupEl.querySelectorAll(".option").forEach(b => b.classList.remove("active"));
+  btnEl.classList.add("active");
+}
+
+document.querySelectorAll(".grid[data-group]").forEach(groupEl => {
+  groupEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button.option");
+    if (!btn) return;
+    const key = groupEl.getAttribute("data-group");
+    const value = btn.getAttribute("data-value");
+    setActive(groupEl, btn);
+    characterData[key] = value;
+  });
+});
+
+document.getElementById("genBtn").addEventListener("click", () => {
+  characterData.name = document.getElementById("name").value.trim();
+  characterData.age = document.getElementById("age").value.trim();
+  characterData.style = document.getElementById("style").value.trim();
+  outputEl.value = JSON.stringify(characterData, null, 2);
+});
+
+/* -----------------------------
+   Single-file PWA: Manifest
+------------------------------ */
+(function injectManifest(){
+  // Minimal 192/512 icons using inline SVG data URLs (works as placeholders).
+  // For production: replace with real PNGs.
+  const iconSvg = (size) => `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="96" fill="#282a29"/>
+    <circle cx="256" cy="210" r="92" fill="#f6f6f6"/>
+    <rect x="116" y="324" width="280" height="92" rx="46" fill="#f6f6f6"/>
+  </svg>`.trim();
+  const svgToDataUrl = (svg) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+
+  const manifest = {
+    name: "Character Creator",
+    short_name: "Creator",
+    description: "Customize a character and export key-value pairs.",
+    start_url: "./",
+    scope: "./",
+    display: "standalone",
+    background_color: "#f6f6f6",
+    theme_color: "#f6f6f6",
+    icons: [
+      { src: svgToDataUrl(iconSvg(192)), sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+      { src: svgToDataUrl(iconSvg(512)), sizes: "512x512", type: "image/svg+xml", purpose: "any" }
+    ]
+  };
+
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+  const manifestUrl = URL.createObjectURL(blob);
+
+  const link = document.createElement("link");
+  link.rel = "manifest";
+  link.href = manifestUrl;
+  document.head.appendChild(link);
+})();
+
+/* -----------------------------
+   Single-file PWA: Service Worker
+------------------------------ */
+(async function registerServiceWorker(){
+  const statusEl = document.getElementById("pwaText");
+
+  if (!("serviceWorker" in navigator)) {
+    statusEl.textContent = "Service Worker unavailable";
+    return;
+  }
+
+  // Service worker code as a string (single-file).
+  const swCode = `
+    const CACHE_NAME = "cc-cache-v1";
+    const OFFLINE_URL = self.location.origin + self.registration.scope; // scope root
+
+    self.addEventListener("install", (event) => {
+      self.skipWaiting();
+      event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        // Cache the app shell (this HTML). Using {cache:'reload'} to avoid stale.
+        try {
+          await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
+        } catch (_) {
+          // If scope root is not fetchable, ignore; runtime caching still works.
+        }
+      })());
+    });
+
+    self.addEventListener("activate", (event) => {
+      event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => (k === CACHE_NAME ? null : caches.delete(k))));
+        await self.clients.claim();
+      })());
+    });
+
+    self.addEventListener("fetch", (event) => {
+      const req = event.request;
+
+      // Only handle GET
+      if (req.method !== "GET") return;
+
+      const url = new URL(req.url);
+
+      // Network-first for HTML navigations to keep app updated, fallback to cache.
+      const isNav = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
+      if (isNav) {
+        event.respondWith((async () => {
+          try {
+            const fresh = await fetch(req);
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(req, fresh.clone());
+            return fresh;
+          } catch (e) {
+            const cache = await caches.open(CACHE_NAME);
+            return (await cache.match(req)) || (await cache.match(OFFLINE_URL)) || new Response("Offline", { status: 503 });
+          }
+        })());
+        return;
+      }
+
+      // Cache-first for same-origin static assets (best-effort).
+      if (url.origin === self.location.origin) {
+        event.respondWith((async () => {
+          const cache = await caches.open(CACHE_NAME);
+          const cached = await cache.match(req);
+          if (cached) return cached;
+          try {
+            const res = await fetch(req);
+            // Cache only successful basic responses.
+            if (res && res.status === 200 && res.type === "basic") cache.put(req, res.clone());
+            return res;
+          } catch (e) {
+            return cached || new Response("", { status: 504 });
+          }
+        })());
+      }
+    });
+  `.trim();
+
+  try {
+    const swBlob = new Blob([swCode], { type: "text/javascript" });
+    const swUrl = URL.createObjectURL(swBlob);
+
+    const reg = await navigator.serviceWorker.register(swUrl, { scope: "./" });
+
+    // Report readiness
+    const ready = await navigator.serviceWorker.ready;
+    statusEl.textContent = "Offline ready";
+    // Optional: update handling
+    reg.addEventListener("updatefound", () => {
+      statusEl.textContent = "Updating…";
+    });
+    if (ready.active) statusEl.textContent = "Offline ready";
+  } catch (err) {
+    statusEl.textContent = "SW registration failed";
+  }
+})();
+
+/* -----------------------------
+   Install prompt UX
+------------------------------ */
+let deferredPrompt = null;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.disabled = false;
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  installBtn.disabled = true;
+  deferredPrompt.prompt();
+  try { await deferredPrompt.userChoice; } catch (_) {}
+  deferredPrompt = null;
+});
+
+// Hide install if already installed (display-mode standalone).
+(function detectInstalled(){
+  const statusEl = document.getElementById("pwaText");
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if (isStandalone) {
+    installBtn.disabled = true;
+    installBtn.style.display = "none";
+    statusEl.textContent = "Installed";
+  }
+})();
+</script>
+
+</body>
+</html>
