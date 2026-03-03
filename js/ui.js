@@ -7,7 +7,7 @@ export function renderApp(rootEl, { schema, state, getByPath }) {
     blocks.push(renderSection(section, state, getByPath));
   }
 
-  blocks.push(`<button class="c-btn c-btnPrimary" id="genBtn" type="button">Generate Output</button>`);
+  blocks.push(`<button class="c-btn c-btnPrimary" id="genBtn" type="button">Randomize</button>`);
 
   blocks.push(`
     <div class="c-card" id="outputCard">

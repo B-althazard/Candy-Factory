@@ -1,4 +1,4 @@
-const CACHE_NAME = "candy-factory-v0.0.7";
+const CACHE_NAME = "candy-factory-v0.0.8";
 
 const APP_SHELL = [
   "./",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./VERSION.txt",
   "./CHANGELOG.md",
   "./data/schema.json",
-  "./data/schema.v0.0.7.json",
+  "./data/schema.v0.0.8.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./styles/tokens.css",
@@ -21,6 +21,7 @@ const APP_SHELL = [
   "./js/storage.js",
   "./js/ui.js",
   "./js/format.js",
+  "./js/randomize.js",
   "./js/components/fields.js",
   "./js/components/output.js"
 ];

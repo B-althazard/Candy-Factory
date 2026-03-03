@@ -1,6 +1,7 @@
 import { loadSchema } from "./schema.js";
 import { createCharacterState } from "./state.js";
 import { formatPreferredOutput } from "./format.js";
+import { randomizeState } from "./randomize.js";
 import { loadState, saveState } from "./storage.js";
 import { registerServiceWorker, setupInstallButton } from "./pwa.js";
 import { renderApp } from "./ui.js";
@@ -62,8 +63,15 @@ function normalize(value) {
   });
 
   genBtn.addEventListener("click", () => {
-    refreshOutput();
-    outputCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  randomizeState(state, schema);
+  saveState(state);
+  setFieldValues(appRoot, state, { getByPath });
+  refreshOutput();
+  outputCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  const prev = genBtn.textContent;
+  genBtn.textContent = "Randomized";
+  setTimeout(() => (genBtn.textContent = prev), 900);
+});
     const prev = genBtn.textContent;
     genBtn.textContent = "Generated";
     setTimeout(() => (genBtn.textContent = prev), 900);
