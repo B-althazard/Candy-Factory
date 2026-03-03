@@ -7,10 +7,10 @@ export function renderApp(rootEl, { schema, state, getByPath }) {
     blocks.push(renderSection(section, state, getByPath));
   }
 
-  blocks.push(`<button class="c-btn c-btnPrimary" id="genBtn">Generate Output</button>`);
+  blocks.push(`<button class="c-btn c-btnPrimary" id="genBtn" type="button">Generate Output</button>`);
 
   blocks.push(`
-    <div class="c-card">
+    <div class="c-card" id="outputCard">
       <div class="c-sectionTitle">Output</div>
       <div class="u-row" style="justify-content:space-between;margin-bottom:12px;">
         <div class="c-muted" id="schemaMeta"></div>

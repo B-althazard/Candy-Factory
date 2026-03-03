@@ -1,5 +1,6 @@
 import { loadSchema } from "./schema.js";
-import { createCharacterState, toPreferredOutput } from "./state.js";
+import { createCharacterState } from "./state.js";
+import { formatPreferredOutput } from "./format.js";
 import { loadState, saveState } from "./storage.js";
 import { registerServiceWorker, setupInstallButton } from "./pwa.js";
 import { renderApp } from "./ui.js";
@@ -42,10 +43,14 @@ function normalize(value) {
   setFieldValues(appRoot, state, { getByPath });
 
   const outputEl = document.getElementById("output");
+  const outputCard = document.getElementById("outputCard");
   const copyBtn = document.getElementById("copyBtn");
   const genBtn = document.getElementById("genBtn");
 
-  const refreshOutput = () => renderOutput(outputEl, toPreferredOutput(state));
+  function refreshOutput() {
+    renderOutput(outputEl, formatPreferredOutput(state, schema));
+  }
+
   refreshOutput();
 
   bindFields(appRoot, {
@@ -56,7 +61,13 @@ function normalize(value) {
     }
   });
 
-  genBtn.addEventListener("click", refreshOutput);
+  genBtn.addEventListener("click", () => {
+    refreshOutput();
+    outputCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    const prev = genBtn.textContent;
+    genBtn.textContent = "Generated";
+    setTimeout(() => (genBtn.textContent = prev), 900);
+  });
 
   copyBtn.addEventListener("click", async () => {
     try {

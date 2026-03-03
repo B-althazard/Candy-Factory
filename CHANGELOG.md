@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.7 (2026-03-03)
+- Fixed output formatting: output now includes all filled schema fields (schema-driven) instead of a hardcoded subset.
+- "Generate Output" now provides visible feedback and scrolls to Output.
+
 ## v0.0.6 (2026-03-03)
 - Added Normal Mode schema-driven UI (select-based inputs) for Subject, Appearance, Body attributes.
 - Implemented schema loader (`/data/schema.json`) with offline fallback and basic schema versioning.
