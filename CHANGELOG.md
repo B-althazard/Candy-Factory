@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.9 (2026-03-03)
+- Fixed syntax error in app.js (unexpected '}').
+- Rewrote Randomize handler deterministically.
+- Added <meta name="mobile-web-app-capable" content="yes"> to address deprecation warning.
+
 ## v0.0.8 (2026-03-03)
 - Replaced "Generate Output" with "Randomize" to generate random valid selections (including name).
 - Output continues to refresh live on input changes.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "candy-factory-v0.0.8";
+const CACHE_NAME = "candy-factory-v0.0.9";
 
 const APP_SHELL = [
   "./",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./VERSION.txt",
   "./CHANGELOG.md",
   "./data/schema.json",
-  "./data/schema.v0.0.8.json",
+  "./data/schema.v0.0.9.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./styles/tokens.css",

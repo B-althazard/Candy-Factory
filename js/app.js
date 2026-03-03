@@ -63,33 +63,30 @@ function normalize(value) {
   });
 
   genBtn.addEventListener("click", () => {
-  randomizeState(state, schema);
-  saveState(state);
-  setFieldValues(appRoot, state, { getByPath });
-  refreshOutput();
-  outputCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  const prev = genBtn.textContent;
-  genBtn.textContent = "Randomized";
-  setTimeout(() => (genBtn.textContent = prev), 900);
-});
+    randomizeState(state, schema);
+    saveState(state);
+    setFieldValues(appRoot, state, { getByPath });
+    refreshOutput();
+    outputCard.scrollIntoView({ behavior: "smooth", block: "start" });
     const prev = genBtn.textContent;
-    genBtn.textContent = "Generated";
-    setTimeout(() => (genBtn.textContent = prev), 900);
+    genBtn.textContent = "Randomized";
+    setTimeout(() => { genBtn.textContent = prev; }, 900);
   });
 
   copyBtn.addEventListener("click", async () => {
     try {
       await copyToClipboard(outputEl.value);
       copyBtn.textContent = "Copied";
-      setTimeout(() => (copyBtn.textContent = "Copy"), 900);
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 900);
     } catch {
       copyBtn.textContent = "Copy failed";
-      setTimeout(() => (copyBtn.textContent = "Copy"), 900);
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 900);
     }
   });
 
   const installBtn = document.getElementById("installBtn");
   setupInstallButton(installBtn);
+
   const pwaText = document.getElementById("pwaText");
   registerServiceWorker({ onStatus: (s) => (pwaText.textContent = s) });
 })();
