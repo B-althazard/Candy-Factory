@@ -83,3 +83,45 @@
   flex-wrap:wrap;
 }
 .c-actionsRow .c-btnGhost{flex:1; min-width: 120px;}
+
+/* sections */
+.c-sectionHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 10px;
+}
+.c-sectionToggle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  background:transparent;
+  border:0;
+  padding:0;
+  font: inherit;
+  color: inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.c-chevron{
+  width: 18px;
+  display:inline-block;
+}
+.c-sectionBody.is-collapsed{ display:none; }
+
+.c-btnTiny{
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+/* lock indicator */
+.is-locked .c-label::after{
+  content:"  • locked";
+  font-size:12px;
+  opacity:.65;
+}
