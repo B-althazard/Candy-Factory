@@ -10,10 +10,22 @@ export function renderApp(rootEl, { schema, state, getByPath }) {
   blocks.push(`<button class="c-btn c-btnPrimary" id="genBtn" type="button">Randomize</button>`);
 
   blocks.push(`
-    <div class="c-card" id="outputCard">
+    <div class="c-card">
+  <div class="c-sectionTitle">Actions</div>
+  <div class="c-actionsRow">
+    <button class="c-btn c-btnGhost" id="genBtn" type="button">Randomize</button>
+    <button class="c-btn c-btnGhost" id="resetBtn" type="button">Reset</button>
+    <button class="c-btn c-btnGhost" id="exportTxtBtn" type="button">Export TXT</button>
+    <button class="c-btn c-btnGhost" id="exportJsonBtn" type="button">Export JSON</button>
+  </div>
+  <div class="c-muted">Validation runs continuously; exports use current state/output.</div>
+</div>
+
+<div class="c-card" id="outputCard">
       <div class="c-sectionTitle">Output</div>
       <div class="u-row" style="justify-content:space-between;margin-bottom:12px;">
         <div class="c-muted" id="schemaMeta"></div>
+        <div class="c-muted" id="valMeta"></div>
         <button class="c-btn c-btnGhost" id="copyBtn" type="button">Copy</button>
       </div>
       <textarea id="output" class="c-textarea" readonly></textarea>

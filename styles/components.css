@@ -71,3 +71,15 @@
 
 .c-field{display:flex;flex-direction:column;gap:8px;margin-bottom:var(--s-12);}
 .c-label{font-size:var(--fs-13);opacity:.75;}
+
+/* validation */
+.is-invalid{
+  border-color:#b9b9b9 !important;
+  box-shadow:0 0 0 2px rgba(0,0,0,.06);
+}
+.c-actionsRow{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.c-actionsRow .c-btnGhost{flex:1; min-width: 120px;}

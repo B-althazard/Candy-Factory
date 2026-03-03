@@ -15,7 +15,7 @@ export async function loadSchema() {
     const latest = await fetchJson("./data/schema.json");
     return { schema: latest, source: "network" };
   } catch {
-    const fallback = await fetch("./data/schema.v0.0.8.json", { cache: "force-cache" });
+    const fallback = await fetch("./data/schema.v0.1.0.json", { cache: "force-cache" });
     const schema = await fallback.json();
     return { schema, source: "fallback" };
   }

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.0 (2026-03-03)
+- Added schema validation (required + option constraints) with inline invalid field styling and status summary.
+- Added export: download Output as .txt and download character as flat key-value .json.
+- Added Reset action (clears to defaults) while keeping Randomize.
+- Updated PWA cache version and schema fallback pointer.
+
 ## v0.0.9 (2026-03-03)
 - Fixed syntax error in app.js (unexpected '}').
 - Rewrote Randomize handler deterministically.
