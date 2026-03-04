@@ -1,6 +1,5 @@
 import { loadPresets, addPreset, deletePreset, getPreset } from "../../presets.js";
 import { createCharacterState } from "../../state.js";
-import { saveLocks } from "../../locks.js";
 
 export function renderPresetsPane(pane, ctx) {
   return `
@@ -62,7 +61,6 @@ export function bindPresetsPane(pane, ctx) {
       Object.assign(doc.state, fresh);
       doc.locks.clear();
       for (const x of (p.locks ?? [])) doc.locks.add(String(x));
-      saveLocks(doc.locks);
       ctx.touchDoc(doc); ctx.persistSession(); ctx.emitDocChange();
     }
 

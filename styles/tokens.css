@@ -1,28 +1,73 @@
-:root{
-  --c-ink:#282a29;
-  --c-bg:#f6f6f6;
-  --c-surface:#ffffff;
+/*
+Candy Factory — token foundation
 
+Token discipline:
+- Primitive tokens: raw values (colors, spacing, radius, shadow, motion, type)
+- Semantic tokens: meaning (surface, text, border, focus, actions)
+
+Accent ramps (100/300/900) are placeholders until approved in DMS Open Items.
+Only 500 and 700 steps are locked (see DMS + DSSS).
+*/
+
+:root{
+  /* -----------------------------
+   * Primitive: colors
+   * ----------------------------- */
+  --cf-neutral-900:#282A29;
+  --cf-neutral-50:#F6F6F6;
+  --cf-white:#FFFFFF;
+
+  --cf-brand-pink-500:#FF5571; /* locked */
+  --cf-brand-pink-700:#EE0027; /* locked (white-text fill) */
+  --cf-brand-pink-100:#FFE3E8; /* placeholder */
+  --cf-brand-pink-300:#FF9AAD; /* placeholder */
+  --cf-brand-pink-900:#7A0014; /* placeholder */
+
+  --cf-system-blue-500:#5773FF; /* locked */
+  --cf-system-blue-700:#4665FF; /* locked (white-text fill) */
+  --cf-system-blue-100:#DEE6FF; /* placeholder */
+  --cf-system-blue-300:#9CB0FF; /* placeholder */
+  --cf-system-blue-900:#1B2A8C; /* placeholder */
+
+  --cf-border-light:#E7E7E7;
+  --cf-border-mid:#DDDDDD;
+  --cf-border-dark:rgba(0,0,0,.10);
+  --cf-border-dark-strong:rgba(0,0,0,.12);
+
+  /* -----------------------------
+   * Primitive: typography
+   * ----------------------------- */
   --ff:"Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --fw-regular:400;
   --fw-semibold:600;
   --fw-bold:700;
+  --fw-extrabold:800;
 
   --fs-12:12px;
   --fs-13:13px;
   --fs-14:14px;
   --fs-16:16px;
+  --fs-22:22px;
   --fs-28:28px;
 
-  --s-6:6px;
+  /* -----------------------------
+   * Primitive: spacing (4pt base)
+   * ----------------------------- */
+  --s-4:4px;
   --s-8:8px;
-  --s-10:10px;
   --s-12:12px;
-  --s-14:14px;
   --s-16:16px;
-  --s-18:18px;
   --s-20:20px;
+  --s-24:24px;
+  --s-28:28px;
+  --s-32:32px;
+  --s-40:40px;
+  --s-48:48px;
+  --s-64:64px;
 
+  /* -----------------------------
+   * Primitive: radius + elevation
+   * ----------------------------- */
   --r-12:12px;
   --r-14:14px;
   --r-16:16px;
@@ -30,9 +75,78 @@
 
   --sh-card:0 8px 20px rgba(0,0,0,.04);
   --sh-float:0 6px 16px rgba(0,0,0,.03);
+  --sh-fab:0 14px 34px rgba(0,0,0,.18);
+  --sh-floatPanel:0 22px 60px rgba(0,0,0,.25);
 
-  --b-subtle:1px solid #e7e7e7;
-  --b-input:1px solid #dddddd;
-
+  /* -----------------------------
+   * Primitive: motion
+   * ----------------------------- */
   --t-fast:150ms;
+  --e-standard:cubic-bezier(.2,.8,.2,1);
+
+  /* -----------------------------
+   * Semantic: default (light)
+   * ----------------------------- */
+  --cf-surface-page:var(--cf-neutral-50);
+  --cf-surface-panel:var(--cf-white);
+  --cf-text-primary:var(--cf-neutral-900);
+  --cf-text-muted:rgba(40,42,41,.65);
+
+  --cf-border-subtle:1px solid var(--cf-border-light);
+  --cf-border-input:1px solid var(--cf-border-mid);
+  --cf-divider:var(--cf-border-dark);
+
+  --cf-focus-ring:0 0 0 3px rgba(87,115,255,.30); /* uses system-blue */
+  --cf-focus-outline:rgba(87,115,255,.65);
+
+  /* Semantic (placeholder) state tokens */
+  --cf-state-invalid-border:rgba(0,0,0,.25);
+  --cf-state-invalid-ring:0 0 0 2px rgba(0,0,0,.06);
+
+  --cf-action-primary-bg:var(--cf-brand-pink-700);
+  --cf-action-primary-fg:var(--cf-white);
+  --cf-action-secondary-bg:var(--cf-surface-panel);
+  --cf-action-secondary-fg:var(--cf-text-primary);
+
+  --cf-accent-brand:var(--cf-brand-pink-500);
+  --cf-accent-system:var(--cf-system-blue-500);
+
+  /* -----------------------------
+   * Back-compat aliases used by existing CSS
+   * ----------------------------- */
+  --c-ink:var(--cf-text-primary);
+  --c-text:var(--cf-text-primary);
+  --c-bg:var(--cf-surface-page);
+  --c-surface:var(--cf-surface-panel);
+  --b-subtle:var(--cf-border-subtle);
+  --b-input:var(--cf-border-input);
+}
+
+:root[data-theme="dark"]{
+  --cf-surface-page:#0F1112;
+  --cf-surface-panel:#171A1B;
+  --cf-text-primary:#F6F6F6;
+  --cf-text-muted:rgba(246,246,246,.65);
+
+  --cf-border-subtle:1px solid rgba(255,255,255,.10);
+  --cf-border-input:1px solid rgba(255,255,255,.14);
+  --cf-divider:rgba(255,255,255,.14);
+
+  --cf-focus-ring:0 0 0 3px rgba(87,115,255,.35);
+  --cf-focus-outline:rgba(87,115,255,.75);
+
+  --cf-state-invalid-border:rgba(255,255,255,.25);
+  --cf-state-invalid-ring:0 0 0 2px rgba(255,255,255,.10);
+}
+
+:root[data-theme="native"]{
+  /* "Native" maps to a lighter panel-on-light posture */
+  --cf-surface-page:var(--cf-white);
+  --cf-surface-panel:var(--cf-neutral-50);
+  --cf-text-primary:var(--cf-neutral-900);
+  --cf-text-muted:rgba(40,42,41,.65);
+}
+
+@media (prefers-reduced-motion: reduce){
+  :root{ --t-fast:0ms; }
 }

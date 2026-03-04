@@ -46,6 +46,14 @@ function renderMobileWorkstation(mainEl, ctx) {
 }
 
 function renderMobileDefault(mainEl, ctx) {
+  const sectionMap = {
+    identity: ["character", "subject"],
+    appearance: ["appearance", "hair", "face", "eyes", "lips", "skin"],
+    body: ["body", "distinguishing_marks"],
+    style: ["style", "pose", "waist_emphasis_system"],
+    wardrobe: ["wardrobe", "top", "bottom", "outer_layer", "materials", "color_system", "accessories"]
+  };
+
   mainEl.innerHTML = `
     <div class="c-mobileTabs">
       <nav class="c-tabbar">
@@ -55,6 +63,7 @@ function renderMobileDefault(mainEl, ctx) {
         <button class="c-tab" data-tab="style">Style</button>
         <button class="c-tab" data-tab="wardrobe">Wardrobe</button>
         <button class="c-tab" data-tab="output">Output</button>
+        <button class="c-tab" data-tab="preview">Preview</button>
       </nav>
       <div class="c-tabBody" id="tabBody"></div>
     </div>
@@ -66,6 +75,7 @@ function renderMobileDefault(mainEl, ctx) {
 
   const renderTab = (tab) => {
     tabBody.innerHTML = "";
+
     if (tab === "output") {
       const outPane = { id: "p_output_tab", type: PaneTypes.output, title: "Output", region: "tab", visible: true };
       tabBody.innerHTML = renderPane(outPane, ctx);
@@ -73,22 +83,25 @@ function renderMobileDefault(mainEl, ctx) {
       return;
     }
 
-    const editor = { id: "p_editor_tab", type: PaneTypes.editor, title: "Editor", region: "tab", visible: true };
+    if (tab === "preview") {
+      const prvPane = { id: "p_preview_tab", type: PaneTypes.preview, title: "Preview", region: "tab", visible: true };
+      tabBody.innerHTML = renderPane(prvPane, ctx);
+      bindPane(prvPane, ctx);
+      return;
+    }
+
+    const allow = sectionMap[tab] || [];
+    const editor = {
+      id: "p_editor_tab",
+      type: PaneTypes.editor,
+      title: "Editor",
+      region: "tab",
+      visible: true,
+      sectionFilter: allow
+    };
+
     tabBody.innerHTML = renderPane(editor, ctx);
     bindPane(editor, ctx);
-
-    const map = {
-      identity: ["character", "subject"],
-      appearance: ["appearance", "hair", "face", "eyes", "lips", "skin"],
-      body: ["body", "distinguishing_marks"],
-      style: ["style", "pose", "waist_emphasis_system"],
-      wardrobe: ["wardrobe", "top", "bottom", "outer_layer", "materials", "color_system", "accessories"]
-    };
-    const allow = new Set(map[tab] || []);
-    tabBody.querySelectorAll(".c-section[data-section-id]").forEach(sec => {
-      const id = sec.getAttribute("data-section-id");
-      sec.style.display = allow.has(id) ? "" : "none";
-    });
   };
 
   renderTab(active);

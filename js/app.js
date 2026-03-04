@@ -2,6 +2,7 @@ import { loadSchema } from "./schema.js";
 import { migrateIfNeeded } from "./migrate.js";
 import { loadUIState, saveUIState } from "./ui_state.js";
 import { loadTheme, applyTheme, saveTheme } from "./theme/theme.js";
+import { createDiagnostics } from "./diagnostics.js";
 import { renderShell } from "./workspace/shell.js";
 import { deviceClass, computeMode, ensureLayout, renderMain } from "./workspace/renderer.js";
 import { loadLayouts, upsertLayout } from "./workspace/layout_store.js";
@@ -10,7 +11,7 @@ import { createDoc, renameDoc } from "./workspace/docs.js";
 import { buildProjectFile, downloadProject, readProjectFile } from "./project/cfproject.js";
 import { registerServiceWorker } from "./pwa.js";
 
-const APP_VERSION = "0.2.0";
+const APP_VERSION = "0.3.1";
 
 const root = document.getElementById("app");
 
@@ -28,6 +29,18 @@ function escapeHtml(str) {
   return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
 }
 
+function isVersionNewer(a, b) {
+  const pa = String(a || "").trim().split(".").map(n => parseInt(n, 10));
+  const pb = String(b || "").trim().split(".").map(n => parseInt(n, 10));
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = Number.isFinite(pa[i]) ? pa[i] : 0;
+    const nb = Number.isFinite(pb[i]) ? pb[i] : 0;
+    if (na > nb) return true;
+    if (na < nb) return false;
+  }
+  return false;
+}
+
 (async function init() {
   const { schema, source } = await loadSchema();
   const uiState = loadUIState();
@@ -38,6 +51,34 @@ function escapeHtml(str) {
   session.ui = session.ui || { mode: "auto", active_tab: "identity", active_layout_id: "" };
   if (!Array.isArray(session.docs)) session.docs = [];
 
+  // Diagnostics: local-first, exportable.
+  const diagnostics = createDiagnostics({
+    appVersion: APP_VERSION,
+    getContext: () => ({
+      mode: computeMode(session),
+      active_layout_id: session?.ui?.active_layout_id || "",
+      active_doc_id: session?.active_doc_id || "",
+      schema_version: schema?.schema_version || "",
+      device_class: deviceClass()
+    })
+  });
+  diagnostics.installGlobalHandlers();
+  diagnostics.log("info", "app_init", "App init", { schema_source: source });
+
+  // Rehydrate stored docs into canonical in-memory shape (locks Set, meta object).
+  try {
+    session.docs = session.docs.map(d => {
+      const doc = createDoc({ id: d?.id, name: d?.name, state: d?.state, locks: d?.locks, meta: d?.meta });
+      if (d?.created_at) doc.created_at = d.created_at;
+      if (d?.updated_at) doc.updated_at = d.updated_at;
+      // Preserve meta if present
+      if (d?.meta && typeof d.meta === "object") doc.meta = { ...d.meta };
+      return doc;
+    });
+  } catch {
+    session.docs = [];
+  }
+
   // migrate legacy v0.1.x single state into first doc
   try {
     const legacyRaw = localStorage.getItem("candy_factory_state_v1");
@@ -46,14 +87,40 @@ function escapeHtml(str) {
       const legacyState = JSON.parse(legacyRaw);
       const legacyLocks = legacyLocksRaw ? JSON.parse(legacyLocksRaw) : [];
       const mig = migrateIfNeeded({ state: legacyState ?? {}, meta: {}, schema });
-      const doc = createDoc({ name: legacyState?.character?.name || "Character", state: mig.state, locks: legacyLocks });
+      const doc = createDoc({
+        name: legacyState?.character?.name || "Character",
+        state: mig.state,
+        locks: legacyLocks,
+        meta: { schema_version: mig?.meta?.schema_version || schema?.schema_version || "" }
+      });
       session.docs.push(doc);
       session.active_doc_id = doc.id;
+      diagnostics.log("info", "legacy_migrate", "Migrated legacy state", { to_schema_version: doc.meta.schema_version });
     }
   } catch {}
 
+  // Migration-on-load for all docs (schema evolution safety).
+  for (const doc of (session.docs ?? [])) {
+    try {
+      const curMeta = doc.meta && typeof doc.meta === "object" ? doc.meta : (doc.meta = {});
+      const mig = migrateIfNeeded({
+        state: doc.state ?? {},
+        meta: { schema_version: curMeta.schema_version || "" },
+        schema
+      });
+      doc.state = mig.state;
+      curMeta.schema_version = mig?.meta?.schema_version || schema?.schema_version || "";
+      if (mig.didMigrate) {
+        doc.updated_at = new Date().toISOString();
+        diagnostics.log("info", "doc_migrate", "Migrated document", { doc_id: doc.id, to: curMeta.schema_version, message: mig.message });
+      }
+    } catch (e) {
+      diagnostics.log("error", "doc_migrate_failed", "Doc migration failed", { doc_id: doc?.id, error: String(e?.message || e) });
+    }
+  }
+
   if (session.docs.length === 0) {
-    const doc = createDoc({ name: "Character 1", state: {}, locks: [] });
+    const doc = createDoc({ name: "Character 1", state: {}, locks: [], meta: { schema_version: schema?.schema_version || "" } });
     session.docs.push(doc);
     session.active_doc_id = doc.id;
   }
@@ -61,6 +128,7 @@ function escapeHtml(str) {
 
   const mode = computeMode(session);
   const dc = deviceClass();
+  document.documentElement.setAttribute("data-device", dc);
 
   renderShell(root, { deviceClass: dc });
 
@@ -87,8 +155,12 @@ function escapeHtml(str) {
   const importProjectInput = document.getElementById("importProjectInput");
 
   const fab = document.getElementById("fab");
+  const fabMenu = document.getElementById("fabMenu");
+  const fabScrim = document.getElementById("fabScrim");
   const floatOutput = document.getElementById("floatOutput");
   const floatPresets = document.getElementById("floatPresets");
+  const floatPreview = document.getElementById("floatPreview");
+  const floatDiagnostics = document.getElementById("floatDiagnostics");
 
   const reg = await import("./workspace/panes/registry.js");
   const renderPane = reg.renderPane;
@@ -101,6 +173,7 @@ function escapeHtml(str) {
     schema,
     uiState,
     appVersion: APP_VERSION,
+    diagnostics,
     session,
     getByPath: (obj, path) => path.split(".").reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj),
     setByPath: (obj, path, value) => {
@@ -115,9 +188,10 @@ function escapeHtml(str) {
     },
     touchDoc: (doc) => { doc.updated_at = new Date().toISOString(); },
     resetDoc: (doc) => {
-      const fresh = createDoc({ id: doc.id, name: doc.name, state: {}, locks: [] });
+      const fresh = createDoc({ id: doc.id, name: doc.name, state: {}, locks: [], meta: { ...(doc.meta ?? {}) } });
       doc.state = fresh.state;
       doc.locks = fresh.locks;
+      doc.meta = fresh.meta;
       doc.updated_at = new Date().toISOString();
     },
     getActiveDoc: () => session.docs.find(d => d.id === session.active_doc_id) || null,
@@ -131,6 +205,8 @@ function escapeHtml(str) {
     docSelect.value = session.active_doc_id || "";
   }
 
+
+  ctx.refreshDocSelect = refreshDocSelect;
   function refreshLayoutSelect() {
     const layoutsNow = loadLayouts();
     const cur = session.ui.active_layout_id || "";
@@ -142,12 +218,20 @@ function escapeHtml(str) {
     if (mode !== "mobile_workstation") return;
     floatOutput.innerHTML = "";
     floatPresets.innerHTML = "";
+    floatPreview.innerHTML = "";
+    floatDiagnostics.innerHTML = "";
     const outPane = { id: "p_out_float", type: "output", title: "Output", region: "float_output", visible: true };
     const prePane = { id: "p_pre_float", type: "presets", title: "Presets", region: "float_presets", visible: true };
+    const prvPane = { id: "p_prv_float", type: "preview", title: "Preview", region: "float_preview", visible: true };
+    const diaPane = { id: "p_dia_float", type: "diagnostics", title: "Diagnostics", region: "float_diagnostics", visible: true };
     floatOutput.innerHTML = `<div class="c-floatInner">${renderPane(outPane, ctx)}</div>`;
     floatPresets.innerHTML = `<div class="c-floatInner">${renderPane(prePane, ctx)}</div>`;
+    floatPreview.innerHTML = `<div class="c-floatInner">${renderPane(prvPane, ctx)}</div>`;
+    floatDiagnostics.innerHTML = `<div class="c-floatInner">${renderPane(diaPane, ctx)}</div>`;
     bindPane(outPane, ctx);
     bindPane(prePane, ctx);
+    bindPane(prvPane, ctx);
+    bindPane(diaPane, ctx);
   }
 
   function renderAll() {
@@ -166,7 +250,7 @@ function escapeHtml(str) {
 
   newDocBtn.addEventListener("click", () => {
     const n = session.docs.length + 1;
-    const doc = createDoc({ name: `Character ${n}`, state: {}, locks: [] });
+    const doc = createDoc({ name: `Character ${n}`, state: {}, locks: [], meta: { schema_version: schema?.schema_version || "" } });
     session.docs.push(doc);
     session.active_doc_id = doc.id;
     ctx.persistSession();
@@ -210,6 +294,7 @@ function escapeHtml(str) {
   });
 
   exportProjectBtn.addEventListener("click", () => {
+    diagnostics.log("info", "project_export", "Export project", null);
     const payload = buildProjectFile({
       app_version: APP_VERSION,
       schema_version: schema.schema_version ?? "",
@@ -228,7 +313,26 @@ function escapeHtml(str) {
     if (!f) return;
     try {
       const proj = await readProjectFile(f);
-      session.docs = (proj.characters ?? []).map(c => createDoc({ id: c.id, name: c.name, state: c.state, locks: c.locks }));
+
+      // Basic import validation (required fields)
+      if (!proj || typeof proj !== "object") throw new Error("Invalid project payload");
+      if (!proj.app_version || !proj.schema_version) throw new Error("Missing app_version or schema_version");
+      if (!Array.isArray(proj.characters)) throw new Error("Missing characters[]");
+
+      if (isVersionNewer(proj.schema_version, schema?.schema_version || "")) {
+        throw new Error(`Project schema_version (${proj.schema_version}) is newer than this app's schema (${schema?.schema_version || ""}). Update the app before importing.`);
+      }
+
+      session.docs = (proj.characters ?? []).map(c => {
+        const meta = (c?.meta && typeof c.meta === "object") ? { ...c.meta } : { schema_version: proj.schema_version };
+        // Migration-on-import to current packaged schema
+        const mig = migrateIfNeeded({ state: c?.state ?? {}, meta: { schema_version: meta.schema_version || proj.schema_version }, schema });
+        meta.schema_version = mig?.meta?.schema_version || schema?.schema_version || "";
+        const doc = createDoc({ id: c.id, name: c.name, state: mig.state, locks: c.locks, meta });
+        if (c?.created_at) doc.created_at = c.created_at;
+        if (c?.updated_at) doc.updated_at = c.updated_at;
+        return doc;
+      });
       session.active_doc_id = session.docs[0]?.id || null;
 
       const ls = Array.isArray(proj.workspace_layouts) ? proj.workspace_layouts : [];
@@ -247,7 +351,10 @@ function escapeHtml(str) {
       ctx.persistSession();
       renderAll();
       ctx.emitDocChange();
+
+      diagnostics.log("info", "project_import", "Imported project", { app_version: proj.app_version, schema_version: proj.schema_version, chars: session.docs.length });
     } catch (e) {
+      diagnostics.log("error", "project_import_failed", "Import failed", { error: String(e?.message || e) });
       alert("Import failed: " + String(e?.message || e));
     } finally {
       importProjectInput.value = "";
@@ -259,19 +366,112 @@ function escapeHtml(str) {
     panel.setAttribute("aria-hidden", on ? "false" : "true");
   }
 
+  function closeAllFloats() {
+    setFloat(floatOutput, false);
+    setFloat(floatPresets, false);
+    setFloat(floatPreview, false);
+    setFloat(floatDiagnostics, false);
+  }
+
+  function anyFloatOpen() {
+    return (
+      floatOutput.classList.contains("is-open") ||
+      floatPresets.classList.contains("is-open") ||
+      floatPreview.classList.contains("is-open") ||
+      floatDiagnostics.classList.contains("is-open")
+    );
+  }
+
+  function setFabMenuOpen(on) {
+    if (!fabMenu || !fabScrim) return;
+    fabMenu.classList.toggle("is-open", on);
+    fabMenu.setAttribute("aria-hidden", on ? "false" : "true");
+    syncFabUI();
+  }
+
+  function syncFabUI() {
+    const open = fabMenu?.classList.contains("is-open");
+    const floating = anyFloatOpen();
+    const showClose = Boolean(open || floating);
+
+    // Scrim only when the menu is open and no float panel is open (avoid blocking interaction).
+    const scrimOn = Boolean(open && !floating);
+    if (fabScrim) {
+      fabScrim.classList.toggle("is-open", scrimOn);
+      fabScrim.setAttribute("aria-hidden", scrimOn ? "false" : "true");
+    }
+
+    fab.textContent = showClose ? "✕" : "≡";
+    fab.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function closeWorkstationUI() {
+    closeAllFloats();
+    if (fabMenu) fabMenu.classList.remove("is-open");
+    if (fabMenu) fabMenu.setAttribute("aria-hidden", "true");
+    syncFabUI();
+  }
+
+  function openPanel(key) {
+    closeAllFloats();
+    if (key === "output") setFloat(floatOutput, true);
+    if (key === "presets") setFloat(floatPresets, true);
+    if (key === "preview") setFloat(floatPreview, true);
+    if (key === "diagnostics") setFloat(floatDiagnostics, true);
+    setFabMenuOpen(true); // keep menu open while the panel is open
+    syncFabUI();
+  }
+
+  if (fabScrim) {
+    fabScrim.addEventListener("click", () => {
+      if (mode !== "mobile_workstation") return;
+      closeWorkstationUI();
+    });
+  }
+
+  if (fabMenu) {
+    fabMenu.addEventListener("click", (e) => {
+      if (mode !== "mobile_workstation") return;
+      const btn = e.target.closest("[data-fab-panel]");
+      if (!btn) return;
+      const key = btn.getAttribute("data-fab-panel");
+      if (!key) return;
+
+      const alreadyOpen =
+        (key === "output" && floatOutput.classList.contains("is-open")) ||
+        (key === "presets" && floatPresets.classList.contains("is-open")) ||
+        (key === "preview" && floatPreview.classList.contains("is-open")) ||
+        (key === "diagnostics" && floatDiagnostics.classList.contains("is-open"));
+
+      if (alreadyOpen) {
+        closeWorkstationUI();
+        return;
+      }
+
+      openPanel(key);
+    });
+  }
+
   fab.addEventListener("click", () => {
     if (deviceClass() !== "mobile") return;
+
+    // From mobile tabs → enter workstation mode.
     if (mode !== "mobile_workstation") {
       session.ui.mode = "mobile_workstation";
       ctx.persistSession();
       location.reload();
       return;
     }
-    const outOpen = floatOutput.classList.contains("is-open");
-    const preOpen = floatPresets.classList.contains("is-open");
-    if (!outOpen && !preOpen) { setFloat(floatOutput, true); setFloat(floatPresets, false); return; }
-    if (outOpen && !preOpen) { setFloat(floatOutput, false); setFloat(floatPresets, true); return; }
-    setFloat(floatOutput, false); setFloat(floatPresets, false);
+
+    // In workstation mode:
+    // - If any panel/menu is open, close everything (X behavior).
+    // - Otherwise open the speed-dial menu.
+    const menuOpen = fabMenu?.classList.contains("is-open");
+    if (anyFloatOpen() || menuOpen) {
+      closeWorkstationUI();
+      return;
+    }
+    setFabMenuOpen(true);
   });
 
   fab.addEventListener("dblclick", () => {
@@ -280,6 +480,10 @@ function escapeHtml(str) {
     ctx.persistSession();
     location.reload();
   });
+
+  // Ensure initial icon state is correct.
+  syncFabUI();
+
 
   renderAll();
   ctx.persistSession();
@@ -293,6 +497,7 @@ function serializeSession(session) {
       name: d.name,
       state: d.state,
       locks: Array.from(d.locks ?? []),
+      meta: d.meta && typeof d.meta === "object" ? d.meta : {},
       created_at: d.created_at,
       updated_at: d.updated_at
     })),

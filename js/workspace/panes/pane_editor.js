@@ -1,7 +1,7 @@
 import { renderApp } from "../../ui.js";
 import { setFieldValues, bindFields } from "../../components/fields.js";
 import { validateState, applyValidationToFields, summarizeValidation } from "../../validate.js";
-import { saveLocks, lockPaths, unlockPath } from "../../locks.js";
+import { lockPaths, unlockPath } from "../../locks.js";
 import { randomizeState, getSectionPaths } from "../../randomize.js";
 import { setCollapsed, saveUIState } from "../../ui_state.js";
 
@@ -17,7 +17,7 @@ export function renderEditorPane(pane, ctx) {
       </div>
       <div class="c-paneBody">
         <div class="c-editorRoot" id="${pane.id}__editor"></div>
-        <div class="c-muted" id="${pane.id}__meta"></div>
+        <div class="c-muted c-editorMeta" id="${pane.id}__meta"></div>
       </div>
     </div>
   `;
@@ -32,10 +32,24 @@ export function bindEditorPane(pane, ctx) {
   const { schema } = ctx;
   const getByPath = ctx.getByPath;
 
+  let lastActiveDocId = null;
+
+  function applySectionFilter() {
+    const filter = pane?.sectionFilter;
+    if (!filter || !Array.isArray(filter) || !filter.length) return;
+    const allow = new Set(filter.map(String));
+    editorRoot.querySelectorAll(".c-section[data-section-id]").forEach(sec => {
+      const id = sec.getAttribute("data-section-id");
+      sec.style.display = allow.has(String(id)) ? "" : "none";
+    });
+  }
+
   function renderForActive() {
     const doc = ctx.getActiveDoc();
     if (!doc) return;
+    lastActiveDocId = doc.id;
     renderApp(editorRoot, { schema, state: doc.state, getByPath, uiState: ctx.uiState });
+    applySectionFilter();
     setFieldValues(editorRoot, doc.state, { getByPath });
     refreshValidation(doc);
   }
@@ -43,12 +57,13 @@ export function bindEditorPane(pane, ctx) {
   function refreshValidation(doc) {
     const validation = validateState(doc.state, schema);
     applyValidationToFields(editorRoot, validation);
-    meta.textContent = `Validation: ${summarizeValidation(validation)}`;
+    const summary = summarizeValidation(validation);
+    meta.textContent = summary === "Valid" ? "" : `Validation: ${summary}`;
   }
 
   renderForActive();
 
-  editorRoot.addEventListener("click", (e) => {
+  host.addEventListener("click", (e) => {
     const t = e.target;
     const doc = ctx.getActiveDoc();
     if (!doc) return;
@@ -72,9 +87,12 @@ export function bindEditorPane(pane, ctx) {
     if (rand) {
       const id = rand.getAttribute("data-rand-section");
       const paths = getSectionPaths(schema, id);
-      const randomized = randomizeState(doc.state, schema, { onlyPaths: paths, lockedPaths: new Set(), includeName: id === "character" });
+      const randomized = randomizeState(doc.state, schema, {
+        onlyPaths: paths,
+        lockedPaths: doc.locks,
+        includeName: id === "character"
+      });
       lockPaths(doc.locks, randomized);
-      saveLocks(doc.locks);
       ctx.touchDoc(doc);
       ctx.persistSession();
       setFieldValues(editorRoot, doc.state, { getByPath });
@@ -88,32 +106,60 @@ export function bindEditorPane(pane, ctx) {
       const a = action.getAttribute("data-pane-action");
       if (a === "randomize_all") {
         randomizeState(doc.state, schema, { lockedPaths: doc.locks, includeName: true });
-        ctx.touchDoc(doc); ctx.persistSession();
+        ctx.touchDoc(doc);
+        ctx.persistSession();
         setFieldValues(editorRoot, doc.state, { getByPath });
-        refreshValidation(doc); ctx.emitDocChange();
+        refreshValidation(doc);
+        ctx.emitDocChange();
+        return;
       }
       if (a === "reset_doc") {
-        ctx.resetDoc(doc); ctx.persistSession();
-        renderForActive(); ctx.emitDocChange();
+        ctx.resetDoc(doc);
+        ctx.persistSession();
+        renderForActive();
+        ctx.emitDocChange();
+        return;
       }
     }
   });
 
   bindFields(editorRoot, {
-    onChange: (path, value) => {
+    onChange: (path, value, meta) => {
       const doc = ctx.getActiveDoc();
       if (!doc) return;
       ctx.setByPath(doc.state, path, value);
-      if (doc.locks.has(path)) { unlockPath(doc.locks, path); saveLocks(doc.locks); }
-      ctx.touchDoc(doc); ctx.persistSession();
-      refreshValidation(doc); ctx.emitDocChange();
+      if (doc.locks.has(path)) unlockPath(doc.locks, path);
+
+      // Keep document name in sync with required Character Name.
+      if (path === "character.name") {
+        const nm = String(value ?? "").trim() || "Character";
+        doc.name = nm.slice(0, 40);
+        if (meta?.isCommit) ctx.refreshDocSelect?.();
+      }
+
+      ctx.touchDoc(doc);
+      ctx.persistSession();
+      refreshValidation(doc);
+      ctx.emitDocChange();
     }
   });
 
-  ctx.onDocChange(() => renderForActive());
+  ctx.onDocChange(() => {
+    const active = ctx.getActiveDoc();
+    if (!active) return;
+    if (active.id !== lastActiveDocId) renderForActive();
+  });
 }
 
 function escapeHtml(str) {
-  return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
-function cssEscape(s){ return String(s).replace(/"/g,'\\"'); }
+
+function cssEscape(s) {
+  return String(s).replace(/"/g, "\\\"");
+}

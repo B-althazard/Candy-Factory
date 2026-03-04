@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.3.1 (2026-03-04)
+- Fixed Editor header actions (Randomize/Reset) not firing (desktop + mobile).
+- Fixed mobile tab view expanding into full long-form list after interaction (section filtering preserved).
+- Dark theme: fixed unreadable black text in inputs/selects/textarea.
+- Added id/name wiring for all form controls to address browser autofill warnings.
+- Mobile: replaced FAB cycle behavior with a speed-dial menu (Output/Presets/Preview/Diagnostics) and close (X) behavior.
+- Mobile: added dialog-based multi-select control (searchable checklist) for multi-select fields.
+- Seeded required Character Name from document name and kept doc name in sync when editing name.
+
+## v0.3.0 (2026-03-04)
+- DMS M1 foundation upgrades: migration-on-load per document; schema_version tracked per doc metadata.
+- Added local-first diagnostics capture (window errors + unhandled rejections) with exportable payload.
+- Added Preview summary card pane (structured, schema-driven, non-generative).
+- Mobile workstation floating panels extended: Output → Presets → Preview → Diagnostics.
+- Project import now validates required fields and runs migration-on-import.
+
+## v0.2.1 (2026-03-04)
+- Fixed blank screen by restoring index.html module script + minimal app mount.
+
 ## v0.2.0 (2026-03-03)
 - Workstation foundation: desktop split panes, mobile tabs + mobile workstation mode.
 - Theme selector: Light / Dark / Native (persisted).

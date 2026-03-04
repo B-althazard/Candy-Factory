@@ -3,15 +3,16 @@ html,body{height:100%;}
 body{
   font-family:var(--ff);
   background:var(--c-bg);
-  color:var(--c-ink);
-  padding:var(--s-20);
-  max-width:480px;
-  margin:0 auto;
+  color:var(--c-text);
+  margin:0;
 }
 button,input,textarea,select{font-family:inherit;}
+
+/* Focus: keyboard-first desktop support */
 :focus{outline:none;}
+:focus-visible{outline:3px solid var(--cf-focus-outline); outline-offset:2px;}
 
 .u-row{display:flex;align-items:center;gap:var(--s-12);}
 .u-col{display:flex;flex-direction:column;}
-.u-gap-14{gap:var(--s-14);}
+.u-gap-14{gap:var(--s-16);}
 .l-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-12);}

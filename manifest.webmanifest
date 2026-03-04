@@ -1,8 +1,8 @@
 {
   "name": "Candy Factory",
-  "short_name": "Candy",
+  "short_name": "Candy Factory",
   "description": "Schema-driven character creation (Normal Mode).",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f6f6f6",

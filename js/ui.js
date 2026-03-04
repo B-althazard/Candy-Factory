@@ -2,20 +2,30 @@ import { renderField } from "./components/fields.js";
 import { isCollapsed } from "./ui_state.js";
 
 export function renderApp(rootEl, { schema, state, getByPath, uiState }) {
+  const fieldMap = new Map();
   const blocks = [];
-  for (const section of (schema.sections ?? [])) blocks.push(renderSection(section, state, getByPath, uiState));
+  for (const section of (schema.sections ?? [])) blocks.push(renderSection(section, state, getByPath, uiState, fieldMap));
   rootEl.innerHTML = blocks.join("");
+  // Used by field binders for richer controls (e.g., mobile multi-select).
+  rootEl.__fieldMap = fieldMap;
 }
 
-function renderSection(section, state, getByPath, uiState) {
+function renderSection(section, state, getByPath, uiState, fieldMap) {
   const id = String(section.id ?? section.title ?? "section");
   const title = escapeHtml(section.title ?? section.id ?? "Section");
   const inner = [];
 
-  for (const field of (section.fields ?? [])) inner.push(renderField(field, getByPath(state, field.path)));
+  for (const field of (section.fields ?? [])) {
+    if (field?.path) fieldMap.set(String(field.path), field);
+    inner.push(renderField(field, getByPath(state, field.path)));
+  }
+
   for (const sub of (section.subsections ?? [])) {
     inner.push(`<div class="c-subSectionTitle">${escapeHtml(sub.title ?? sub.id ?? "Subsection")}</div>`);
-    for (const field of (sub.fields ?? [])) inner.push(renderField(field, getByPath(state, field.path)));
+    for (const field of (sub.fields ?? [])) {
+      if (field?.path) fieldMap.set(String(field.path), field);
+      inner.push(renderField(field, getByPath(state, field.path)));
+    }
   }
 
   const collapsed = isCollapsed(uiState, id);
@@ -38,5 +48,10 @@ function renderSection(section, state, getByPath, uiState) {
 }
 
 function escapeHtml(str) {
-  return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }

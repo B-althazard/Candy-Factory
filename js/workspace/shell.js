@@ -28,10 +28,32 @@ export function renderShell(root, { deviceClass }) {
 
       <main class="c-main" id="mainArea"></main>
 
-      <button class="c-fab" id="fab" type="button" aria-label="Workstation actions">≡</button>
+      <div class="c-fabScrim" id="fabScrim" aria-hidden="true"></div>
+      <div class="c-fabMenu" id="fabMenu" aria-hidden="true">
+        <button class="c-fabItem" type="button" data-fab-panel="output" aria-label="Open Output">
+          <span class="c-fabItemLabel">Output</span>
+          <span class="c-fabItemIcon">⎘</span>
+        </button>
+        <button class="c-fabItem" type="button" data-fab-panel="presets" aria-label="Open Presets">
+          <span class="c-fabItemLabel">Presets</span>
+          <span class="c-fabItemIcon">★</span>
+        </button>
+        <button class="c-fabItem" type="button" data-fab-panel="preview" aria-label="Open Preview">
+          <span class="c-fabItemLabel">Preview</span>
+          <span class="c-fabItemIcon">👁</span>
+        </button>
+        <button class="c-fabItem" type="button" data-fab-panel="diagnostics" aria-label="Open Diagnostics">
+          <span class="c-fabItemLabel">Diagnostics</span>
+          <span class="c-fabItemIcon">⚙</span>
+        </button>
+      </div>
+
+      <button class="c-fab" id="fab" type="button" aria-label="Workstation actions" aria-expanded="false">≡</button>
 
       <div class="c-floatPanel" id="floatOutput" aria-hidden="true"></div>
       <div class="c-floatPanel" id="floatPresets" aria-hidden="true"></div>
+      <div class="c-floatPanel" id="floatPreview" aria-hidden="true"></div>
+      <div class="c-floatPanel" id="floatDiagnostics" aria-hidden="true"></div>
 
       <footer class="c-footer">
         <div class="c-muted" id="footerLeft"></div>

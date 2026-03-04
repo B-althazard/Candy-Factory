@@ -1,4 +1,4 @@
-const CACHE_NAME = "candy-factory-v0.2.0";
+const CACHE_NAME = "candy-factory-v0.3.1";
 
 const APP_SHELL = [
   "./",
@@ -8,13 +8,14 @@ const APP_SHELL = [
   "./VERSION.txt",
   "./CHANGELOG.md",
   "./data/schema.json",
-  "./data/schema.v0.2.0.json",
+  "./data/schema.v0.2.1.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./styles/tokens.css",
   "./styles/utilities.css",
   "./styles/components.css",
   "./js/app.js",
+  "./js/diagnostics.js",
   "./js/pwa.js",
   "./js/schema.js",
   "./js/state.js",
@@ -41,7 +42,9 @@ const APP_SHELL = [
   "./js/workspace/panes/registry.js",
   "./js/workspace/panes/pane_editor.js",
   "./js/workspace/panes/pane_output.js",
-  "./js/workspace/panes/pane_presets.js"
+  "./js/workspace/panes/pane_presets.js",
+  "./js/workspace/panes/pane_preview.js",
+  "./js/workspace/panes/pane_diagnostics.js"
 ];
 
 self.addEventListener("install", (event) => {
