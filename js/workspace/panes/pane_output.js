@@ -61,6 +61,7 @@ export function bindOutputPane(pane, ctx) {
       setOutputMode(ctx.uiState, modeBtn.getAttribute("data-out-mode"));
       saveUIState(ctx.uiState);
       refresh();
+      ctx.notify?.(`Output mode: ${getOutputMode(ctx.uiState) === "prompt" ? "Prompt" : "Preferred"}`, { kind: "info", duration: 1400 });
       return;
     }
 
@@ -69,11 +70,21 @@ export function bindOutputPane(pane, ctx) {
     const a = act.getAttribute("data-out-action");
 
     if (a === "copy") {
-      try { await copyToClipboard(out.value); act.textContent = "Copied"; setTimeout(() => (act.textContent = "Copy"), 700); } catch {}
+      try {
+        await copyToClipboard(out.value);
+        ctx.notify?.("Output copied", { kind: "success" });
+      } catch {
+        ctx.notify?.("Copy failed", { kind: "error" });
+      }
+      return;
     }
+
     if (a === "txt") {
       downloadText(`CandyFactory_${safeName(doc.name)}_${nowStamp()}.txt`, out.value);
+      ctx.notify?.("TXT exported", { kind: "success" });
+      return;
     }
+
     if (a === "json") {
       const flat = buildFlatKV(doc.state, ctx.schema);
       downloadJson(`CandyFactory_${safeName(doc.name)}_${nowStamp()}.json`, {
@@ -86,6 +97,7 @@ export function bindOutputPane(pane, ctx) {
         locked_paths: Array.from(doc.locks ?? []),
         output_mode: getOutputMode(ctx.uiState)
       });
+      ctx.notify?.("JSON exported", { kind: "success" });
     }
   });
 
@@ -93,9 +105,10 @@ export function bindOutputPane(pane, ctx) {
 }
 
 function nowStamp() {
-  const d = new Date(); const pad = (n) => String(n).padStart(2, "0");
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 function safeName(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,32)||"character"; }
 function escapeHtml(str){ return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
-function cssEscape(s){ return String(s).replace(/"/g,'\\"'); }
+function cssEscape(s){ return String(s).replace(/"/g,'\"'); }

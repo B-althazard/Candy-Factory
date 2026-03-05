@@ -31,7 +31,6 @@ export function bindEditorPane(pane, ctx) {
 
   const { schema } = ctx;
   const getByPath = ctx.getByPath;
-
   let lastActiveDocId = null;
 
   function applySectionFilter() {
@@ -48,7 +47,7 @@ export function bindEditorPane(pane, ctx) {
     const doc = ctx.getActiveDoc();
     if (!doc) return;
     lastActiveDocId = doc.id;
-    renderApp(editorRoot, { schema, state: doc.state, getByPath, uiState: ctx.uiState });
+    renderApp(editorRoot, { schema, state: doc.state, getByPath, uiState: ctx.uiState, lockSet: doc.locks });
     applySectionFilter();
     setFieldValues(editorRoot, doc.state, { getByPath });
     refreshValidation(doc);
@@ -59,6 +58,18 @@ export function bindEditorPane(pane, ctx) {
     applyValidationToFields(editorRoot, validation);
     const summary = summarizeValidation(validation);
     meta.textContent = summary === "Valid" ? "" : `Validation: ${summary}`;
+  }
+
+  function updateFieldLockUI(path, locked) {
+    const field = editorRoot.querySelector(`[data-field-path="${cssEscape(path)}"]`);
+    if (!field) return;
+    field.classList.toggle("is-locked", Boolean(locked));
+    const btn = field.querySelector(`[data-lock-path="${cssEscape(path)}"]`);
+    if (!btn) return;
+    btn.setAttribute("aria-pressed", locked ? "true" : "false");
+    btn.setAttribute("aria-label", locked ? "Unlock field" : "Lock field");
+    btn.setAttribute("title", locked ? "Unlock field" : "Lock field");
+    btn.textContent = locked ? "🔒" : "🔓";
   }
 
   renderForActive();
@@ -83,6 +94,19 @@ export function bindEditorPane(pane, ctx) {
       return;
     }
 
+    const lockBtn = t.closest("[data-lock-path]");
+    if (lockBtn) {
+      const path = lockBtn.getAttribute("data-lock-path");
+      if (!path) return;
+      if (doc.locks.has(path)) unlockPath(doc.locks, path);
+      else doc.locks.add(path);
+      updateFieldLockUI(path, doc.locks.has(path));
+      ctx.touchDoc(doc);
+      ctx.persistSession();
+      ctx.notify?.(`${doc.locks.has(path) ? "Locked" : "Unlocked"} ${labelForPath(path, schema)}`, { kind: "info", duration: 1400 });
+      return;
+    }
+
     const rand = t.closest("[data-rand-section]");
     if (rand) {
       const id = rand.getAttribute("data-rand-section");
@@ -95,9 +119,9 @@ export function bindEditorPane(pane, ctx) {
       lockPaths(doc.locks, randomized);
       ctx.touchDoc(doc);
       ctx.persistSession();
-      setFieldValues(editorRoot, doc.state, { getByPath });
-      refreshValidation(doc);
-      ctx.emitDocChange();
+      renderForActive();
+      ctx.emitDocChange("editor_randomize_section");
+      ctx.notify?.(`Randomized ${randomized.length} field${randomized.length === 1 ? "" : "s"}`, { kind: "success" });
       return;
     }
 
@@ -105,50 +129,66 @@ export function bindEditorPane(pane, ctx) {
     if (action) {
       const a = action.getAttribute("data-pane-action");
       if (a === "randomize_all") {
-        randomizeState(doc.state, schema, { lockedPaths: doc.locks, includeName: true });
+        const randomized = randomizeState(doc.state, schema, { lockedPaths: doc.locks, includeName: true });
+        lockPaths(doc.locks, randomized);
         ctx.touchDoc(doc);
         ctx.persistSession();
-        setFieldValues(editorRoot, doc.state, { getByPath });
-        refreshValidation(doc);
-        ctx.emitDocChange();
+        renderForActive();
+        ctx.emitDocChange("editor_randomize_all");
+        ctx.notify?.(`Randomized ${randomized.length} field${randomized.length === 1 ? "" : "s"}`, { kind: "success" });
         return;
       }
       if (a === "reset_doc") {
         ctx.resetDoc(doc);
         ctx.persistSession();
         renderForActive();
-        ctx.emitDocChange();
+        ctx.emitDocChange("doc_reset");
+        ctx.notify?.("Character reset", { kind: "warning" });
         return;
       }
     }
   });
 
   bindFields(editorRoot, {
-    onChange: (path, value, meta) => {
+    onChange: (path, value, metaInfo) => {
       const doc = ctx.getActiveDoc();
       if (!doc) return;
       ctx.setByPath(doc.state, path, value);
-      if (doc.locks.has(path)) unlockPath(doc.locks, path);
+      if (doc.locks.has(path)) {
+        unlockPath(doc.locks, path);
+        updateFieldLockUI(path, false);
+      }
 
-      // Keep document name in sync with required Character Name.
       if (path === "character.name") {
         const nm = String(value ?? "").trim() || "Character";
         doc.name = nm.slice(0, 40);
-        if (meta?.isCommit) ctx.refreshDocSelect?.();
+        if (metaInfo?.isCommit) ctx.refreshDocSelect?.();
       }
 
       ctx.touchDoc(doc);
       ctx.persistSession();
       refreshValidation(doc);
-      ctx.emitDocChange();
+      ctx.emitDocChange(metaInfo?.isCommit ? "field_commit" : "field_input");
     }
   });
 
-  ctx.onDocChange(() => {
+  ctx.onDocChange((reason) => {
     const active = ctx.getActiveDoc();
     if (!active) return;
-    if (active.id !== lastActiveDocId) renderForActive();
+    if (active.id !== lastActiveDocId || reason === "preset_apply" || reason === "doc_reset" || reason === "import_project" || reason === "active_doc") {
+      renderForActive();
+    }
   });
+}
+
+function labelForPath(path, schema) {
+  for (const section of (schema?.sections ?? [])) {
+    for (const field of (section.fields ?? [])) if (String(field?.path) === String(path)) return field.label || path;
+    for (const sub of (section.subsections ?? [])) {
+      for (const field of (sub.fields ?? [])) if (String(field?.path) === String(path)) return field.label || path;
+    }
+  }
+  return path;
 }
 
 function escapeHtml(str) {
@@ -161,5 +201,5 @@ function escapeHtml(str) {
 }
 
 function cssEscape(s) {
-  return String(s).replace(/"/g, "\\\"");
+  return String(s).replace(/"/g, "\"");
 }

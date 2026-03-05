@@ -3,6 +3,7 @@ import { migrateIfNeeded } from "./migrate.js";
 import { loadUIState, saveUIState } from "./ui_state.js";
 import { loadTheme, applyTheme, saveTheme } from "./theme/theme.js";
 import { createDiagnostics } from "./diagnostics.js";
+import { createNotifier } from "./components/toast.js";
 import { renderShell } from "./workspace/shell.js";
 import { deviceClass, computeMode, ensureLayout, renderMain } from "./workspace/renderer.js";
 import { loadLayouts, upsertLayout } from "./workspace/layout_store.js";
@@ -11,8 +12,7 @@ import { createDoc, renameDoc } from "./workspace/docs.js";
 import { buildProjectFile, downloadProject, readProjectFile } from "./project/cfproject.js";
 import { registerServiceWorker } from "./pwa.js";
 
-const APP_VERSION = "0.3.1";
-
+const APP_VERSION = "0.3.2";
 const root = document.getElementById("app");
 
 function nowStamp() {
@@ -45,13 +45,13 @@ function isVersionNewer(a, b) {
   const { schema, source } = await loadSchema();
   const uiState = loadUIState();
   const theme = loadTheme();
+  const notifier = createNotifier();
   applyTheme(theme);
 
   let session = loadWorkspaceSession() || createEmptyWorkspace();
-  session.ui = session.ui || { mode: "auto", active_tab: "identity", active_layout_id: "" };
+  session.ui = session.ui || { mode: "auto", active_tab: "identity", active_layout_id: "", tools_open: false };
   if (!Array.isArray(session.docs)) session.docs = [];
 
-  // Diagnostics: local-first, exportable.
   const diagnostics = createDiagnostics({
     appVersion: APP_VERSION,
     getContext: () => ({
@@ -65,13 +65,11 @@ function isVersionNewer(a, b) {
   diagnostics.installGlobalHandlers();
   diagnostics.log("info", "app_init", "App init", { schema_source: source });
 
-  // Rehydrate stored docs into canonical in-memory shape (locks Set, meta object).
   try {
     session.docs = session.docs.map(d => {
       const doc = createDoc({ id: d?.id, name: d?.name, state: d?.state, locks: d?.locks, meta: d?.meta });
       if (d?.created_at) doc.created_at = d.created_at;
       if (d?.updated_at) doc.updated_at = d.updated_at;
-      // Preserve meta if present
       if (d?.meta && typeof d.meta === "object") doc.meta = { ...d.meta };
       return doc;
     });
@@ -79,7 +77,6 @@ function isVersionNewer(a, b) {
     session.docs = [];
   }
 
-  // migrate legacy v0.1.x single state into first doc
   try {
     const legacyRaw = localStorage.getItem("candy_factory_state_v1");
     const legacyLocksRaw = localStorage.getItem("candy_factory_locks_v1");
@@ -99,7 +96,6 @@ function isVersionNewer(a, b) {
     }
   } catch {}
 
-  // Migration-on-load for all docs (schema evolution safety).
   for (const doc of (session.docs ?? [])) {
     try {
       const curMeta = doc.meta && typeof doc.meta === "object" ? doc.meta : (doc.meta = {});
@@ -126,24 +122,18 @@ function isVersionNewer(a, b) {
   }
   if (!session.active_doc_id) session.active_doc_id = session.docs[0].id;
 
-  const mode = computeMode(session);
-  const dc = deviceClass();
-  document.documentElement.setAttribute("data-device", dc);
-
-  renderShell(root, { deviceClass: dc });
+  document.documentElement.setAttribute("data-device", deviceClass());
+  renderShell(root, { deviceClass: deviceClass() });
 
   const mainEl = document.getElementById("mainArea");
   const footerLeft = document.getElementById("footerLeft");
   const footerRight = document.getElementById("footerRight");
 
-  footerLeft.textContent = `App v${APP_VERSION} • Schema v${schema.schema_version ?? "?"} (${source})`;
-  footerRight.textContent = `Mode: ${mode}`;
-
-  registerServiceWorker({ onStatus: (s) => (footerRight.textContent = `Mode: ${mode} • ${s}`) });
-
   const docSelect = document.getElementById("docSelect");
   const newDocBtn = document.getElementById("newDocBtn");
   const renameDocBtn = document.getElementById("renameDocBtn");
+  const toolsToggleBtn = document.getElementById("toolsToggleBtn");
+  const topbarTray = document.getElementById("topbarTray");
 
   const layoutSelect = document.getElementById("layoutSelect");
   const saveLayoutBtn = document.getElementById("saveLayoutBtn");
@@ -167,6 +157,7 @@ function isVersionNewer(a, b) {
   const bindPane = reg.bindPane;
 
   const docChangeListeners = new Set();
+  let swStatus = "";
 
   const ctx = {
     root,
@@ -175,6 +166,7 @@ function isVersionNewer(a, b) {
     appVersion: APP_VERSION,
     diagnostics,
     session,
+    notify: (message, options) => notifier.notify(message, options),
     getByPath: (obj, path) => path.split(".").reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj),
     setByPath: (obj, path, value) => {
       const parts = path.split(".");
@@ -197,16 +189,24 @@ function isVersionNewer(a, b) {
     getActiveDoc: () => session.docs.find(d => d.id === session.active_doc_id) || null,
     persistSession: () => saveWorkspaceSession(serializeSession(session)),
     onDocChange: (fn) => docChangeListeners.add(fn),
-    emitDocChange: () => { for (const fn of docChangeListeners) try { fn(); } catch {} }
+    emitDocChange: (reason = "update") => { for (const fn of docChangeListeners) try { fn(reason); } catch {} }
   };
+
+  function getMode() {
+    return computeMode(session);
+  }
+
+  function updateFooter() {
+    footerLeft.textContent = `App v${APP_VERSION} • Schema v${schema.schema_version ?? "?"} (${source})`;
+    footerRight.textContent = `Mode: ${getMode()}${swStatus ? ` • ${swStatus}` : ""}`;
+  }
 
   function refreshDocSelect() {
     docSelect.innerHTML = session.docs.map(d => `<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)}</option>`).join("");
     docSelect.value = session.active_doc_id || "";
   }
-
-
   ctx.refreshDocSelect = refreshDocSelect;
+
   function refreshLayoutSelect() {
     const layoutsNow = loadLayouts();
     const cur = session.ui.active_layout_id || "";
@@ -214,8 +214,21 @@ function isVersionNewer(a, b) {
     if (cur) layoutSelect.value = cur;
   }
 
+  function syncToolsTray() {
+    const open = Boolean(session?.ui?.tools_open);
+    if (topbarTray) topbarTray.hidden = !open;
+    if (toolsToggleBtn) toolsToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
   function mountFloatsIfNeeded() {
-    if (mode !== "mobile_workstation") return;
+    if (deviceClass() !== "mobile") {
+      floatOutput.innerHTML = "";
+      floatPresets.innerHTML = "";
+      floatPreview.innerHTML = "";
+      floatDiagnostics.innerHTML = "";
+      return;
+    }
+
     floatOutput.innerHTML = "";
     floatPresets.innerHTML = "";
     floatPreview.innerHTML = "";
@@ -235,17 +248,93 @@ function isVersionNewer(a, b) {
   }
 
   function renderAll() {
+    const mode = getMode();
     const layout = ensureLayout(session, loadLayouts());
     renderMain(mainEl, { mode, layout, ctx });
     mountFloatsIfNeeded();
     refreshDocSelect();
     refreshLayoutSelect();
+    syncToolsTray();
+    updateFooter();
+    syncFabUI();
+  }
+
+  registerServiceWorker({
+    onStatus: (s) => {
+      swStatus = s;
+      updateFooter();
+    }
+  });
+
+  function setFloat(panel, on) {
+    panel.classList.toggle("is-open", on);
+    panel.setAttribute("aria-hidden", on ? "false" : "true");
+  }
+
+  function closeAllFloats() {
+    setFloat(floatOutput, false);
+    setFloat(floatPresets, false);
+    setFloat(floatPreview, false);
+    setFloat(floatDiagnostics, false);
+  }
+
+  function anyFloatOpen() {
+    return [floatOutput, floatPresets, floatPreview, floatDiagnostics].some(el => el.classList.contains("is-open"));
+  }
+
+  function setFabMenuOpen(on) {
+    fabMenu.classList.toggle("is-open", on);
+    fabMenu.setAttribute("aria-hidden", on ? "false" : "true");
+    syncFabUI();
+  }
+
+  function syncFabUI() {
+    const mobile = deviceClass() === "mobile";
+    const menuOpen = fabMenu?.classList.contains("is-open");
+    const floating = anyFloatOpen();
+    const workstation = getMode() === "mobile_workstation";
+    const showClose = mobile && (menuOpen || floating || workstation);
+
+    if (fabScrim) {
+      const scrimOn = Boolean(menuOpen && !floating);
+      fabScrim.classList.toggle("is-open", scrimOn);
+      fabScrim.setAttribute("aria-hidden", scrimOn ? "false" : "true");
+    }
+
+    if (fab) {
+      fab.textContent = showClose ? "✕" : "≡";
+      fab.setAttribute("aria-expanded", menuOpen ? "true" : "false");
+    }
+  }
+
+  function closeWorkstationUI() {
+    closeAllFloats();
+    setFabMenuOpen(false);
+    if (deviceClass() === "mobile") {
+      session.ui.mode = "mobile_default";
+      ctx.persistSession();
+    }
+    updateFooter();
+    syncFabUI();
+  }
+
+  function openPanel(key) {
+    session.ui.mode = "mobile_workstation";
+    ctx.persistSession();
+    closeAllFloats();
+    if (key === "output") setFloat(floatOutput, true);
+    if (key === "presets") setFloat(floatPresets, true);
+    if (key === "preview") setFloat(floatPreview, true);
+    if (key === "diagnostics") setFloat(floatDiagnostics, true);
+    setFabMenuOpen(true);
+    updateFooter();
   }
 
   docSelect.addEventListener("change", () => {
     session.active_doc_id = docSelect.value;
     ctx.persistSession();
-    ctx.emitDocChange();
+    ctx.emitDocChange("active_doc");
+    updateFooter();
   });
 
   newDocBtn.addEventListener("click", () => {
@@ -255,7 +344,8 @@ function isVersionNewer(a, b) {
     session.active_doc_id = doc.id;
     ctx.persistSession();
     renderAll();
-    ctx.emitDocChange();
+    ctx.emitDocChange("active_doc");
+    ctx.notify(`Created ${doc.name}`, { kind: "success" });
   });
 
   renameDocBtn.addEventListener("click", () => {
@@ -266,31 +356,49 @@ function isVersionNewer(a, b) {
     renameDoc(doc, name);
     ctx.persistSession();
     refreshDocSelect();
-    ctx.emitDocChange();
+    ctx.emitDocChange("doc_meta");
+    ctx.notify("Character renamed", { kind: "success", duration: 1400 });
+  });
+
+  toolsToggleBtn?.addEventListener("click", () => {
+    session.ui.tools_open = !session.ui.tools_open;
+    ctx.persistSession();
+    syncToolsTray();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!session.ui.tools_open) return;
+    const inTopbar = e.target.closest(".c-topbar");
+    if (inTopbar) return;
+    session.ui.tools_open = false;
+    ctx.persistSession();
+    syncToolsTray();
   });
 
   themeSelect.addEventListener("change", () => {
     const t = { mode: themeSelect.value };
     applyTheme(t);
     saveTheme(t);
+    ctx.notify(`Theme: ${themeSelect.value}`, { kind: "info", duration: 1400 });
   });
 
   saveLayoutBtn.addEventListener("click", () => {
     const name = window.prompt("Layout name", "My Layout");
     if (!name) return;
     const currentLayout = ensureLayout(session, loadLayouts());
-    const out = upsertLayout({ name, device_mode: mode, layout: currentLayout });
+    const out = upsertLayout({ name, device_mode: getMode(), layout: currentLayout });
     session.ui.active_layout_id = out.id;
     ctx.persistSession();
     refreshLayoutSelect();
     layoutSelect.value = out.id;
+    ctx.notify("Layout saved", { kind: "success" });
   });
 
   layoutSelect.addEventListener("change", () => {
     session.ui.active_layout_id = layoutSelect.value || "";
     ctx.persistSession();
     renderAll();
-    ctx.emitDocChange();
+    ctx.emitDocChange("layout_change");
   });
 
   exportProjectBtn.addEventListener("click", () => {
@@ -306,6 +414,7 @@ function isVersionNewer(a, b) {
     });
     const filename = `CandyFactory_${safeName(payload.project_name)}_${nowStamp()}.cfproject.json`;
     downloadProject(filename, payload);
+    ctx.notify("Project exported", { kind: "success" });
   });
 
   importProjectInput.addEventListener("change", async () => {
@@ -313,19 +422,15 @@ function isVersionNewer(a, b) {
     if (!f) return;
     try {
       const proj = await readProjectFile(f);
-
-      // Basic import validation (required fields)
       if (!proj || typeof proj !== "object") throw new Error("Invalid project payload");
       if (!proj.app_version || !proj.schema_version) throw new Error("Missing app_version or schema_version");
       if (!Array.isArray(proj.characters)) throw new Error("Missing characters[]");
-
       if (isVersionNewer(proj.schema_version, schema?.schema_version || "")) {
         throw new Error(`Project schema_version (${proj.schema_version}) is newer than this app's schema (${schema?.schema_version || ""}). Update the app before importing.`);
       }
 
       session.docs = (proj.characters ?? []).map(c => {
         const meta = (c?.meta && typeof c.meta === "object") ? { ...c.meta } : { schema_version: proj.schema_version };
-        // Migration-on-import to current packaged schema
         const mig = migrateIfNeeded({ state: c?.state ?? {}, meta: { schema_version: meta.schema_version || proj.schema_version }, schema });
         meta.schema_version = mig?.meta?.schema_version || schema?.schema_version || "";
         const doc = createDoc({ id: c.id, name: c.name, state: mig.state, locks: c.locks, meta });
@@ -350,140 +455,59 @@ function isVersionNewer(a, b) {
 
       ctx.persistSession();
       renderAll();
-      ctx.emitDocChange();
-
+      ctx.emitDocChange("import_project");
       diagnostics.log("info", "project_import", "Imported project", { app_version: proj.app_version, schema_version: proj.schema_version, chars: session.docs.length });
+      ctx.notify("Project imported", { kind: "success" });
     } catch (e) {
       diagnostics.log("error", "project_import_failed", "Import failed", { error: String(e?.message || e) });
-      alert("Import failed: " + String(e?.message || e));
+      ctx.notify(`Import failed: ${String(e?.message || e)}`, { kind: "error", duration: 3200 });
     } finally {
       importProjectInput.value = "";
     }
   });
 
-  function setFloat(panel, on) {
-    panel.classList.toggle("is-open", on);
-    panel.setAttribute("aria-hidden", on ? "false" : "true");
-  }
-
-  function closeAllFloats() {
-    setFloat(floatOutput, false);
-    setFloat(floatPresets, false);
-    setFloat(floatPreview, false);
-    setFloat(floatDiagnostics, false);
-  }
-
-  function anyFloatOpen() {
-    return (
-      floatOutput.classList.contains("is-open") ||
-      floatPresets.classList.contains("is-open") ||
-      floatPreview.classList.contains("is-open") ||
-      floatDiagnostics.classList.contains("is-open")
-    );
-  }
-
-  function setFabMenuOpen(on) {
-    if (!fabMenu || !fabScrim) return;
-    fabMenu.classList.toggle("is-open", on);
-    fabMenu.setAttribute("aria-hidden", on ? "false" : "true");
-    syncFabUI();
-  }
-
-  function syncFabUI() {
-    const open = fabMenu?.classList.contains("is-open");
-    const floating = anyFloatOpen();
-    const showClose = Boolean(open || floating);
-
-    // Scrim only when the menu is open and no float panel is open (avoid blocking interaction).
-    const scrimOn = Boolean(open && !floating);
-    if (fabScrim) {
-      fabScrim.classList.toggle("is-open", scrimOn);
-      fabScrim.setAttribute("aria-hidden", scrimOn ? "false" : "true");
-    }
-
-    fab.textContent = showClose ? "✕" : "≡";
-    fab.setAttribute("aria-expanded", open ? "true" : "false");
-  }
-
-  function closeWorkstationUI() {
-    closeAllFloats();
-    if (fabMenu) fabMenu.classList.remove("is-open");
-    if (fabMenu) fabMenu.setAttribute("aria-hidden", "true");
-    syncFabUI();
-  }
-
-  function openPanel(key) {
-    closeAllFloats();
-    if (key === "output") setFloat(floatOutput, true);
-    if (key === "presets") setFloat(floatPresets, true);
-    if (key === "preview") setFloat(floatPreview, true);
-    if (key === "diagnostics") setFloat(floatDiagnostics, true);
-    setFabMenuOpen(true); // keep menu open while the panel is open
-    syncFabUI();
-  }
-
-  if (fabScrim) {
-    fabScrim.addEventListener("click", () => {
-      if (mode !== "mobile_workstation") return;
-      closeWorkstationUI();
-    });
-  }
-
-  if (fabMenu) {
-    fabMenu.addEventListener("click", (e) => {
-      if (mode !== "mobile_workstation") return;
-      const btn = e.target.closest("[data-fab-panel]");
-      if (!btn) return;
-      const key = btn.getAttribute("data-fab-panel");
-      if (!key) return;
-
-      const alreadyOpen =
-        (key === "output" && floatOutput.classList.contains("is-open")) ||
-        (key === "presets" && floatPresets.classList.contains("is-open")) ||
-        (key === "preview" && floatPreview.classList.contains("is-open")) ||
-        (key === "diagnostics" && floatDiagnostics.classList.contains("is-open"));
-
-      if (alreadyOpen) {
-        closeWorkstationUI();
-        return;
-      }
-
-      openPanel(key);
-    });
-  }
-
-  fab.addEventListener("click", () => {
+  fabScrim?.addEventListener("click", () => {
     if (deviceClass() !== "mobile") return;
+    closeWorkstationUI();
+  });
 
-    // From mobile tabs → enter workstation mode.
-    if (mode !== "mobile_workstation") {
-      session.ui.mode = "mobile_workstation";
-      ctx.persistSession();
-      location.reload();
+  fabMenu?.addEventListener("click", (e) => {
+    if (deviceClass() !== "mobile") return;
+    const btn = e.target.closest("[data-fab-panel]");
+    if (!btn) return;
+    const key = btn.getAttribute("data-fab-panel");
+    const alreadyOpen =
+      (key === "output" && floatOutput.classList.contains("is-open")) ||
+      (key === "presets" && floatPresets.classList.contains("is-open")) ||
+      (key === "preview" && floatPreview.classList.contains("is-open")) ||
+      (key === "diagnostics" && floatDiagnostics.classList.contains("is-open"));
+
+    if (alreadyOpen) {
+      closeWorkstationUI();
       return;
     }
 
-    // In workstation mode:
-    // - If any panel/menu is open, close everything (X behavior).
-    // - Otherwise open the speed-dial menu.
+    openPanel(key);
+  });
+
+  fab.addEventListener("click", () => {
+    if (deviceClass() !== "mobile") return;
+    if (getMode() !== "mobile_workstation") {
+      session.ui.mode = "mobile_workstation";
+      ctx.persistSession();
+      setFabMenuOpen(true);
+      updateFooter();
+      return;
+    }
+
     const menuOpen = fabMenu?.classList.contains("is-open");
     if (anyFloatOpen() || menuOpen) {
       closeWorkstationUI();
       return;
     }
+
     setFabMenuOpen(true);
   });
-
-  fab.addEventListener("dblclick", () => {
-    if (deviceClass() !== "mobile") return;
-    session.ui.mode = "mobile_default";
-    ctx.persistSession();
-    location.reload();
-  });
-
-  // Ensure initial icon state is correct.
-  syncFabUI();
-
 
   renderAll();
   ctx.persistSession();

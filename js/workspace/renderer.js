@@ -7,8 +7,9 @@ export function deviceClass() {
 
 export function computeMode(session) {
   const dc = deviceClass();
-  if (session?.ui?.mode && session.ui.mode !== "auto") return session.ui.mode;
-  return dc === "desktop" ? "desktop" : "mobile_default";
+  if (dc === "desktop") return "desktop";
+  const requested = String(session?.ui?.mode || "auto");
+  return requested === "mobile_workstation" ? "mobile_workstation" : "mobile_default";
 }
 
 export function ensureLayout(session, layouts) {
@@ -22,8 +23,7 @@ export function ensureLayout(session, layouts) {
 
 export function renderMain(mainEl, { mode, layout, ctx }) {
   if (mode === "desktop") return renderDesktop(mainEl, layout, ctx);
-  if (mode === "mobile_workstation") return renderMobileWorkstation(mainEl, ctx);
-  return renderMobileDefault(mainEl, ctx);
+  return renderMobileShared(mainEl, ctx);
 }
 
 function renderDesktop(mainEl, layout, ctx) {
@@ -39,13 +39,7 @@ function renderDesktop(mainEl, layout, ctx) {
   for (const p of (layout.panes ?? [])) bindPane(p, ctx);
 }
 
-function renderMobileWorkstation(mainEl, ctx) {
-  const editor = { id: "p_editor_main", type: PaneTypes.editor, title: "Editor", region: "main", visible: true };
-  mainEl.innerHTML = `<div class="c-workspaceMobileWS">${renderPane(editor, ctx)}</div>`;
-  bindPane(editor, ctx);
-}
-
-function renderMobileDefault(mainEl, ctx) {
+function renderMobileShared(mainEl, ctx) {
   const sectionMap = {
     identity: ["character", "subject"],
     appearance: ["appearance", "hair", "face", "eyes", "lips", "skin"],
@@ -54,9 +48,11 @@ function renderMobileDefault(mainEl, ctx) {
     wardrobe: ["wardrobe", "top", "bottom", "outer_layer", "materials", "color_system", "accessories"]
   };
 
+  const workstation = String(ctx.session?.ui?.mode || "") === "mobile_workstation";
+
   mainEl.innerHTML = `
-    <div class="c-mobileTabs">
-      <nav class="c-tabbar">
+    <div class="c-mobileTabs ${workstation ? "is-workstation" : ""}">
+      <nav class="c-tabbar" aria-label="Mobile editor sections">
         <button class="c-tab" data-tab="identity">Identity</button>
         <button class="c-tab" data-tab="appearance">Appearance</button>
         <button class="c-tab" data-tab="body">Body</button>

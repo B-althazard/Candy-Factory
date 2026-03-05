@@ -28,3 +28,7 @@ Then open:
 - Local-first: data is stored in `localStorage`.
 - Diagnostics can be exported from the **Diagnostics** pane.
 - Project export/import uses `.cfproject.json` payloads.
+
+
+## v0.3.2
+This bundle contains the UI/UX optimization and bug-fix patch aligned to the v0.3.1 test report.

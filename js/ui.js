@@ -1,30 +1,29 @@
 import { renderField } from "./components/fields.js";
 import { isCollapsed } from "./ui_state.js";
 
-export function renderApp(rootEl, { schema, state, getByPath, uiState }) {
+export function renderApp(rootEl, { schema, state, getByPath, uiState, lockSet }) {
   const fieldMap = new Map();
   const blocks = [];
-  for (const section of (schema.sections ?? [])) blocks.push(renderSection(section, state, getByPath, uiState, fieldMap));
+  for (const section of (schema.sections ?? [])) blocks.push(renderSection(section, state, getByPath, uiState, fieldMap, lockSet));
   rootEl.innerHTML = blocks.join("");
-  // Used by field binders for richer controls (e.g., mobile multi-select).
   rootEl.__fieldMap = fieldMap;
 }
 
-function renderSection(section, state, getByPath, uiState, fieldMap) {
+function renderSection(section, state, getByPath, uiState, fieldMap, lockSet) {
   const id = String(section.id ?? section.title ?? "section");
   const title = escapeHtml(section.title ?? section.id ?? "Section");
   const inner = [];
 
   for (const field of (section.fields ?? [])) {
     if (field?.path) fieldMap.set(String(field.path), field);
-    inner.push(renderField(field, getByPath(state, field.path)));
+    inner.push(renderField(field, getByPath(state, field.path), { locked: Boolean(lockSet?.has?.(String(field.path))) }));
   }
 
   for (const sub of (section.subsections ?? [])) {
     inner.push(`<div class="c-subSectionTitle">${escapeHtml(sub.title ?? sub.id ?? "Subsection")}</div>`);
     for (const field of (sub.fields ?? [])) {
       if (field?.path) fieldMap.set(String(field.path), field);
-      inner.push(renderField(field, getByPath(state, field.path)));
+      inner.push(renderField(field, getByPath(state, field.path), { locked: Boolean(lockSet?.has?.(String(field.path))) }));
     }
   }
 

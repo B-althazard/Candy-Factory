@@ -23,10 +23,8 @@ export function validateState(state, schema) {
             break;
           }
         }
-      } else {
-        if (!opts.includes(String(vRaw))) {
-          issues.push({ path: f.path, type: "option", message: "Invalid option" });
-        }
+      } else if (!opts.includes(String(vRaw))) {
+        issues.push({ path: f.path, type: "option", message: "Invalid option" });
       }
     }
   }
@@ -35,9 +33,16 @@ export function validateState(state, schema) {
 }
 
 export function applyValidationToFields(rootEl, validation) {
+  rootEl.querySelectorAll("[data-field-path]").forEach(el => el.classList.remove("is-invalid"));
   rootEl.querySelectorAll("[data-path]").forEach(el => el.classList.remove("is-invalid"));
+
   const bad = new Set((validation?.issues ?? []).map(i => i.path));
   if (!bad.size) return;
+
+  rootEl.querySelectorAll("[data-field-path]").forEach(el => {
+    const p = el.getAttribute("data-field-path");
+    if (bad.has(p)) el.classList.add("is-invalid");
+  });
 
   rootEl.querySelectorAll("[data-path]").forEach(el => {
     const p = el.getAttribute("data-path");

@@ -48,31 +48,44 @@ export function bindPresetsPane(pane, ctx) {
       const name = window.prompt("Preset name", defaultName);
       if (!name) return;
       const out = addPreset({ name, state: deepClone(doc.state), locks: Array.from(doc.locks) });
-      presets = out.presets; renderOptions(); sel.value = out.id;
+      presets = out.presets;
+      renderOptions();
+      sel.value = out.id;
       meta.textContent = `${presets.length} saved`;
+      ctx.notify?.("Preset saved", { kind: "success" });
+      return;
     }
 
     if (a === "apply") {
-      const id = sel.value; if (!id) return;
-      const p = getPreset(id); if (!p) return;
+      const id = sel.value;
+      if (!id) return;
+      const p = getPreset(id);
+      if (!p) return;
       const fresh = createCharacterState(p.state ?? {});
       if (!fresh.subject.gender) fresh.subject.gender = "female";
       Object.keys(doc.state).forEach(k => delete doc.state[k]);
       Object.assign(doc.state, fresh);
       doc.locks.clear();
       for (const x of (p.locks ?? [])) doc.locks.add(String(x));
-      ctx.touchDoc(doc); ctx.persistSession(); ctx.emitDocChange();
+      ctx.touchDoc(doc);
+      ctx.persistSession();
+      ctx.emitDocChange("preset_apply");
+      ctx.notify?.("Preset applied", { kind: "success" });
+      return;
     }
 
     if (a === "delete") {
-      const id = sel.value; if (!id) return;
+      const id = sel.value;
+      if (!id) return;
       if (!window.confirm("Delete preset?")) return;
-      presets = deletePreset(id); renderOptions();
+      presets = deletePreset(id);
+      renderOptions();
       meta.textContent = presets.length ? `${presets.length} saved` : "No presets saved";
+      ctx.notify?.("Preset deleted", { kind: "warning" });
     }
   });
 }
 
 function deepClone(x){ try{ return structuredClone(x);}catch{ return JSON.parse(JSON.stringify(x ?? {})); } }
 function escapeHtml(str){ return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
-function cssEscape(s){ return String(s).replace(/"/g,'\\"'); }
+function cssEscape(s){ return String(s).replace(/"/g,'\"'); }

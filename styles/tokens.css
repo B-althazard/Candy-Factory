@@ -110,6 +110,18 @@ Only 500 and 700 steps are locked (see DMS + DSSS).
 
   --cf-accent-brand:var(--cf-brand-pink-500);
   --cf-accent-system:var(--cf-system-blue-500);
+  --cf-action-fab-bg:var(--cf-system-blue-700);
+  --cf-action-fab-fg:var(--cf-white);
+  --cf-chip-bg:rgba(87,115,255,.10);
+  --cf-lock-bg:rgba(87,115,255,.08);
+  --cf-lock-ring:rgba(87,115,255,.30);
+  --cf-option-selected-bg:rgba(87,115,255,.08);
+  --cf-toast-bg:var(--cf-neutral-900);
+  --cf-toast-fg:var(--cf-white);
+  --cf-toast-border:rgba(255,255,255,.12);
+  --cf-toast-success-border:rgba(87,115,255,.45);
+  --cf-toast-warning-border:rgba(255,85,113,.45);
+  --cf-toast-error-border:rgba(255,85,113,.72);
 
   /* -----------------------------
    * Back-compat aliases used by existing CSS
@@ -137,6 +149,16 @@ Only 500 and 700 steps are locked (see DMS + DSSS).
 
   --cf-state-invalid-border:rgba(255,255,255,.25);
   --cf-state-invalid-ring:0 0 0 2px rgba(255,255,255,.10);
+  --cf-chip-bg:rgba(87,115,255,.18);
+  --cf-lock-bg:rgba(87,115,255,.14);
+  --cf-lock-ring:rgba(87,115,255,.45);
+  --cf-option-selected-bg:rgba(87,115,255,.14);
+  --cf-toast-bg:#1D2123;
+  --cf-toast-fg:var(--cf-white);
+  --cf-toast-border:rgba(255,255,255,.14);
+  --cf-toast-success-border:rgba(87,115,255,.55);
+  --cf-toast-warning-border:rgba(255,85,113,.55);
+  --cf-toast-error-border:rgba(255,85,113,.82);
 }
 
 :root[data-theme="native"]{
